@@ -1,6 +1,6 @@
 ---
 name: lsp-code-analysis
-description: Semantic codebase intelligence via LSP. Essential for building an accurate mental model of unfamiliar codebases, safely navigating complex dependencies, and performing precise refactoring. Provides compiler-level accuracy for code understanding that surpasses simple text-based search.
+description: Semantic code analysis via LSP. Navigate code (definitions, references, implementations), search symbols, preview refactorings, and get file outlines. Use for exploring unfamiliar codebases or performing safe refactoring.
 license: LICENSE
 ---
 
