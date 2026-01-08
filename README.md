@@ -9,6 +9,16 @@ This [agent skill](https://agentskills.io) equips AI agents with the [Language S
 
 Instead of guessing file paths or grepping for text, agents using this skill can "jump to definition", "find references", and "inspect types" deterministically.
 
+## 📦 Installation
+
+You can install this skill using [openskills](https://github.com/numman-ali/openskills):
+
+```bash
+openskills install lsp-client/lsp-skill --global
+```
+
+For instructions on how to install this skill in different Coding Agents, please refer to the [Installation Guide](https://lsp-client.github.io/#installation).
+
 ## ⚡ Capabilities
 
 The [`lsp-code-analysis`](skills/lsp-code-analysis/SKILL.md) skill provides **compiler-accurate** code understanding that surpasses text-based search:
