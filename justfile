@@ -34,3 +34,14 @@ new-bp category scenario="":
     echo "Next steps:"
     echo "  1. Edit $target"
     echo "  2. Add entry to skills/lsp-code-analysis/SKILL.md or domain indices"
+
+# Package a skill into a zip file
+# Usage: just package <skill_name>
+package skill="lsp-code-analysis":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Packaging {{skill}}..."
+    mkdir -p dist
+    cd skills
+    zip -r ../dist/{{skill}}.zip {{skill}}/
+    echo "Done! Package created at dist/{{skill}}.zip"

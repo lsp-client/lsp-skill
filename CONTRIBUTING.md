@@ -55,4 +55,4 @@ For complex capabilities (e.g., `call-hierarchy`):
 ## Testing Changes
 
 1. Verify `lsp` commands work as described
-2. Repackage: `uv run scripts/package_skill.py <skill_dir>`
+2. Repackage: `just package`
