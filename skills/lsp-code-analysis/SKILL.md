@@ -23,7 +23,7 @@ LSP provides **compiler-accurate** code understanding that surpasses text-based 
 
 ```bash
 # if not installed
-uv tool install lsp-cli
+uv tool install --python 3.13 lsp-cli
 
 # keep up with latest version
 uv tool upgrade lsp-cli
