@@ -7,8 +7,12 @@ license: LICENSE
 
 # LSP Code Analysis
 
+## Abstract
+
+This document specifies the operational requirements and best practices for the `lsp-code-analysis` skill. It provides a semantic interface to codebase navigation and analysis via the Language Server Protocol (LSP).
+
 > [!IMPORTANT]
-> **Update Required**: You MUST run the installation script to check for updates before using this skill in each session:
+> **Update Required**: You MUST run the installation script to check for updates before using this skill:
 >
 > ```bash
 > bash <(curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/scripts/install.sh) <absolute_path_to_this_skill_directory>
@@ -18,9 +22,7 @@ license: LICENSE
 
 ## Overview
 
-Use `lsp-cli` for semantic code navigation and analysis via Language Server Protocol (LSP).
-
-LSP provides **compiler-accurate** code understanding that surpasses text-based search:
+You MUST use `lsp` cli tool for semantic code navigation and analysis. It SHOULD be preferred over `read` or `grep` for most code understanding tasks.
 
 - **Semantic navigation**: Jump to definitions, find references, locate implementations - understands code structure, not just text patterns.
 - **Language-aware**: Distinguishes between variables, functions, classes, types - eliminates false positives from text search.
@@ -29,31 +31,19 @@ LSP provides **compiler-accurate** code understanding that surpasses text-based 
 
 ### Tool Selection
 
-| Task | Traditional Tool | Recommended LSP Command |
-|------|------------------|-------------------------|
-| **Find Definition** | `grep`, `read` | [`definition`](#definition-navigate-to-source) |
-| **Find Usages** | `grep -r` | [`reference`](#reference-find-all-usages) |
-| **Understand File** | `read` | [`outline`](#outline-file-structure) |
-| **View Docs/Types** | `read` | [`hover`](#hover-get-documentation) |
-| **Refactor** | `sed` | [`rename`](#rename-safe-refactoring) |
+| Task                | Traditional Tool | Recommended LSP Command                        |
+| ------------------- | ---------------- | ---------------------------------------------- |
+| **Find Definition** | `grep`, `read`   | [`definition`](#definition-navigate-to-source) |
+| **Find Usages**     | `grep -r`        | [`reference`](#reference-find-all-usages)      |
+| **Understand File** | `read`           | [`outline`](#outline-file-structure)           |
+| **View Docs/Types** | `read`           | [`hover`](#hover-get-documentation)            |
+| **Refactor**        | `sed`            | [`rename`](#rename-safe-refactoring)           |
 
-**Guideline**: Use LSP commands for all code navigation and analysis tasks. Only use `read` or `grep` when semantic analysis is not applicable.
-
-**When to use**: Exploring unfamiliar code, refactoring, debugging, understanding dependencies. **Prefer over grep/text search** when you need to understand how code works, not just where text appears.
-
-## Prerequisites
-
-```bash
-# if not installed
-uv tool install --python 3.13 lsp-cli
-
-# keep up with latest version
-uv tool upgrade lsp-cli
-```
+**Guideline**: Agents SHOULD prioritize LSP commands for code navigation and analysis. Agents MAY use `read` or `grep` ONLY when semantic analysis is not applicable (e.g., searching for comments or literal strings).
 
 ## Commands
 
-All commands support `-h` or `--help`. Command aliases: `def` (definition), `ref` (reference), `sym` (symbol).
+All commands support `-h` or `--help`.
 
 ### Locating Symbols
 
@@ -61,18 +51,22 @@ Most commands use a unified **Locate String** syntax via the `-L` or `--locate` 
 
 **Syntax**: `<file_path>[:<scope>][@<find>]`
 
-- **Scope**: Narrows search area. Supports line (`:42`), range (`:10,20` or `:10-20`), or symbol path (`:User.login`).
-- **Find**: Text pattern within scope. Whitespace-insensitive; matches even if code formatting differs. Use `@text` or `@snippet<|>with_marker` for exact cursor positioning.
-- **Marker**: `<|>` indicates the exact position for symbol resolution (e.g., `user.<|>name`).
+**Scope Formats**:
+
+- `<line>`: Single line number (e.g., `42`).
+- `<start>,<end>`: Line range with comma (e.g., `10,20`).
+- `<start>-<end>`: Line range with dash (e.g., `10-20`).
+- `<symbol_path>`: Symbol path with dots (e.g., `MyClass.my_method`).
 
 **Examples**:
 
-- `main.py:42` - Exactly line 42 in `main.py`.
-- `app.py:User.login` - The `login` method of class `User` in `app.py`.
-- `utils.py:DataUtils@process_data(<|>` - Position at the call to `process_data` within the `DataUtils` class in `utils.py`.
-- `api.py:10,50@config` - The string `config` within lines 10-50 of `api.py` (also `10-50`).
+- `foo.py@self.<|>`
+- `foo.py:42@return <|>result`
+- `foo.py:10,20@if <|>condition`
+- `foo.py:MyClass.my_method@self.<|>`
+- `foo.py:MyClass`
 
-You may use `lsp locate <string>` to verify a location before running other commands.
+Agents MAY use `lsp locate <string>` with the `-c` or `--check` flag to verify if the target exists in the file and view its context before running other commands.
 
 ```bash
 # Verify location exists
@@ -81,7 +75,7 @@ lsp locate "main.py:42@process_data" --check
 
 ### Outline: File Structure
 
-**MUST** use before reading files to get structural overview. **SHOULD** prefer `outline` over full `read` for non-essential code.
+The `outline` command MUST be used before reading files to obtain a structural overview. It SHOULD be preferred over a full `read` for non-essential code.
 
 ```bash
 # Main symbols (classes, functions, methods)
@@ -93,10 +87,10 @@ lsp outline <file_path> --all
 
 ### Definition: Navigate to Source
 
-Jump to symbol definitions. **RECOMMENDED** for verifying function signatures without reading full implementation.
+The `definition` command is RECOMMENDED for verifying function signatures without reading the full implementation.
 
 ```bash
-# By locate string (alias: lsp def)
+# By locate string
 lsp definition -L "models.py:User.get_id"
 
 # Declaration instead of definition
@@ -108,10 +102,10 @@ lsp definition -L "models.py:30" --type
 
 ### Reference: Find All Usages
 
-**REQUIRED** before refactoring or deleting code. Use `--impl` for finding implementations in abstract codebases. Supports pagination for large result sets.
+The `reference` command is REQUIRED before refactoring or deleting code. Agents SHOULD use `--impl` for finding implementations in abstract codebases.
 
 ```bash
-# Find references (alias: lsp ref)
+# Find references
 lsp reference -L "main.py:MyClass.run@logger"
 
 # Find implementations
@@ -126,7 +120,7 @@ lsp reference -L "utils.py:helper" --max-items 50 --start-index 0
 
 ### Hover: Get Documentation
 
-**SHOULD** prefer over `read` for understanding API contracts. Returns docstrings and type signatures.
+The `hover` command SHOULD be preferred over `read` for understanding API contracts. It returns docstrings and type signatures.
 
 ```bash
 # By line
@@ -138,7 +132,7 @@ lsp hover -L "models.py@process_data<|>"
 
 ### Search: Global Symbol Search
 
-**RECOMMENDED** when symbol location is unknown. Use `--kind` to filter results. Supports pagination for large result sets.
+The `search` command is RECOMMENDED when the symbol location is unknown. Agents SHOULD use `--kind` to filter results.
 
 ```bash
 # Search symbols (defaults to current directory)
@@ -159,10 +153,10 @@ lsp search "User" --max-items 20 --start-index 0
 
 ### Rename: Safe Refactoring
 
-Rename a symbol workspace-wide. Use two-step workflow: preview then execute.
+The `rename` command facilitates workspace-wide symbol renaming. A two-step workflow MUST be followed: preview then execute.
 
 ```bash
-# Step 1: Preview changes and get rename_id
+# Step 1 (REQUIRED): Preview changes and get rename_id
 lsp rename preview new_name -L "models.py:OldName"
 
 # Step 2: Execute changes using the rename_id from preview
@@ -174,10 +168,10 @@ lsp rename execute <rename_id> --exclude tests/test_old.py --exclude legacy/
 
 ### Symbol: Local Symbol Info
 
-Get precise coordinate info for a symbol. **MAY** be used to anchor subsequent `hover` or `definition` calls.
+The `symbol` command MAY be used to anchor subsequent `hover` or `definition` calls by providing precise coordinate information.
 
 ```bash
-# By line (alias: lsp sym)
+# By line
 lsp symbol -L "main.py:15"
 
 # By text search
@@ -186,7 +180,7 @@ lsp symbol -L "utils.py@UserClass<|>"
 
 ### Server: Manage Background Servers
 
-Background manager starts automatically. Manual control is **OPTIONAL**. Running `lsp server` without subcommand defaults to `list`.
+The background manager starts automatically. Manual control is OPTIONAL.
 
 ```bash
 # List running servers (default)
@@ -206,39 +200,28 @@ lsp server stop <path>
 
 #### Understanding Unfamiliar Code
 
-**RECOMMENDED** sequence for exploring new codebases:
+```bash
+# Step 1: Scan structure to identify key symbols
+lsp outline <file_path>
 
-1. **Start with outline** - Get file structure without reading implementation.
-2. **Inspect signatures** - Use `hover` to understand API contracts.
-3. **Navigate dependencies** - Follow `definition` chains.
-4. **Map usage** - Find where code is called with `reference`.
-
-#### Refactoring Preparation
-
-**REQUIRED** steps before modifying code:
-
-1. **Find all references** - Identify impact scope.
-2. **Check implementations** - For interfaces/abstract classes using `--impl`.
-3. **Verify type definitions** - Understand type propagation with `--type`.
-4. **Preview Rename** - Use `lsp rename preview` to see workspace-wide impact before executing.
+# Step 2: Locate specific symbol to get coordinate info
+lsp symbol -L "<file_path>:<symbol_name>"
+```
 
 #### Debugging Unknown Behavior
 
-1. **Search for the symbol** - Locate where it's defined with `lsp search`.
-2. **Find the definition** - Verify implementation.
-3. **Trace all callers** - See where it's invoked using `lsp reference`.
+```bash
+# Step 1: Locate symbol definition workspace-wide
+lsp search "<symbol_name>"
 
-### Performance Tips
+# Step 2: Verify implementation details
+lsp definition -L "<file_path>:<symbol_name>"
 
-- **Use `outline` aggressively** - Avoid reading entire files when possible.
-- **Leverage symbol paths** - More precise than line numbers for nested structures.
-- **Use `--max-items`** - Limit results in large codebases.
-- **Prefer `hover` over `definition`** - For understanding without navigating.
-- **Verify with `locate`** - If a command fails, use `lsp locate` to debug the target.
+# Step 3: Trace all callers to understand invocation context
+lsp reference -L "<file_path>:<symbol_name>"
+```
 
-### Common Patterns
-
-#### Finding Interface Implementations
+### Finding Interface Implementations
 
 ```bash
 # Step 1: Locate interface definition
@@ -248,7 +231,7 @@ lsp search "IUserService" --kind interface
 lsp reference -L "src/interfaces.py:IUserService" --impl
 ```
 
-#### Tracing Data Flow
+### Tracing Data Flow
 
 ```bash
 # Step 1: Find where data is created
@@ -261,7 +244,7 @@ lsp reference -L "models.py:UserDTO"
 lsp hover -L "transform.py:map_to_dto"
 ```
 
-#### Understanding Type Hierarchies
+### Understanding Type Hierarchies
 
 ```bash
 # Step 1: Get class outline
@@ -273,6 +256,14 @@ lsp reference -L "models.py:BaseModel"
 # Step 3: Check type definitions
 lsp definition -L "models.py:BaseModel" --type
 ```
+
+### Performance Tips
+
+- **Use `outline` aggressively** - Avoid reading entire files when possible.
+- **Leverage symbol paths** - More precise than line numbers for nested structures.
+- **Use `--max-items`** - Limit results in large codebases.
+- **Prefer `hover` over `definition`** - For understanding without navigating.
+- **Verify with `locate`** - If a command fails, use `lsp locate` to debug the target.
 
 ### Domain-Specific Guides
 

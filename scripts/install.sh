@@ -27,7 +27,7 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ]; then
     echo "  1. Validate the skill directory"
     echo "  2. Check if the skill version is up to date"
     echo "  3. Download and install the latest version if needed"
-    echo "  4. Detect and upgrade lsp-cli if installed"
+    echo "  4. Detect, install, or upgrade lsp-cli"
     echo ""
     exit 0
 fi
@@ -147,7 +147,7 @@ else
     fi
 fi
 
-# Check for lsp-cli and upgrade if installed
+# Check for lsp-cli and install/upgrade
 echo ""
 echo "Checking lsp-cli installation..."
 
@@ -167,8 +167,20 @@ if command -v lsp >/dev/null 2>&1; then
     fi
 else
     echo "⚠ lsp-cli is not installed."
-    echo "To install lsp-cli, run:"
-    echo "  uv tool install --python 3.13 lsp-cli"
+    if command -v uv >/dev/null 2>&1; then
+        echo "Installing lsp-cli..."
+        if uv tool install --python 3.13 lsp-cli; then
+            echo "✓ lsp-cli installed successfully."
+        else
+            echo "Error: Failed to install lsp-cli."
+            exit 1
+        fi
+    else
+        echo "Error: uv not found. Cannot install lsp-cli automatically."
+        echo "Please install uv (https://astral.sh/uv) and then run:"
+        echo "  uv tool install --python 3.13 lsp-cli"
+        exit 1
+    fi
 fi
 
 echo ""
