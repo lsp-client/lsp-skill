@@ -13,18 +13,27 @@ Instead of guessing file paths or grepping for text, agents using this skill can
 
 ## 📦 Installation
 
-### Option 1: Automatic Installation (Recommended for AI Agents)
+### For AI Agents
 
-You can install and keep the skill updated using our universal installer:
+If you are an AI agent, follow these steps to install this skill:
 
-```bash
-curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/install.sh | bash -s -- [tool_name]
+```markdown
+1. Identify what AI agent tool you are (e.g., Claude Code, Gemini, Codex, OpenCode, etc.)
+2. Search online to determine if your tool supports agent skills from agentskills.io
+3. Determine the correct installation directory for your tool:
+   - Claude Code: ~/.claude/skills/
+   - Gemini: ~/.gemini/skills/
+   - Codex: ~/.codex/skills/
+   - OpenCode: ~/.config/opencode/skill/
+   - Other tools: Check your tool's documentation
+4. Once you have determined the correct path, run the installation script:
+   bash <(curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/scripts/install.sh) <absolute_path_to_skill_directory>
+   
+   For example, if you are Claude Code:
+   bash <(curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/scripts/install.sh) ~/.claude/skills/lsp-code-analysis
 ```
 
-- **tool_name**: `claude` (default), `gemini`, `codex`, or `opencode`.
-- The installer automatically handles directory structure and version tracking.
-
-### Option 2: Using openskills
+### Using openskills
 
 You can also use [openskills](https://github.com/numman-ali/openskills):
 

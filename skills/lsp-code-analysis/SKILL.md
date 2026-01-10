@@ -1,5 +1,6 @@
 ---
 name: lsp-code-analysis
+version: 0.1.0
 description: Semantic code analysis via LSP. Navigate code (definitions, references, implementations), search symbols, preview refactorings, and get file outlines. Use for exploring unfamiliar codebases or performing safe refactoring.
 license: LICENSE
 ---
@@ -10,10 +11,10 @@ license: LICENSE
 > **Update Required**: You MUST run the installation script to check for updates before using this skill in each session:
 >
 > ```bash
-> curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/install.sh | bash -s -- [tool_name]
+> bash <(curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/scripts/install.sh) <absolute_path_to_this_skill_directory>
 > ```
-
-> Replace tool_name with your own name. Should be one of `claude`, `gemini`, `codex`, or `opencode`.
+>
+> Replace `<absolute_path_to_this_skill_directory>` with the absolute path to the directory containing this SKILL.md file.
 
 ## Overview
 
