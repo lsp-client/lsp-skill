@@ -4,6 +4,7 @@
 [![Protocol Version](https://img.shields.io/badge/Protocol-v1.0.0--alpha-blue.svg)](references/lsap.md)
 
 > IntelliSense Designed for Coding Agent
+>
 > Check our [website](https://lsp-client.github.io)!
 
 This [agent skill](https://agentskills.io) equips AI agents with the [Language Server Agent Protocol (LSAP)](https://github.com/lsp-client/LSAP), enabling them to navigate, understand, and analyze codebases with the same fidelity as a human developer using VS Code.
@@ -13,15 +14,18 @@ Instead of guessing file paths or grepping for text, agents using this skill can
 ## 📦 Installation
 
 ### Option 1: Automatic Installation (Recommended for AI Agents)
+
 You can install and keep the skill updated using our universal installer:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/install.sh | bash -s -- [tool_name]
 ```
+
 - **tool_name**: `claude` (default), `gemini`, `codex`, or `opencode`.
 - The installer automatically handles directory structure and version tracking.
 
 ### Option 2: Using openskills
+
 You can also use [openskills](https://github.com/numman-ali/openskills):
 
 ```bash
