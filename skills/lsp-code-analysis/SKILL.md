@@ -6,6 +6,15 @@ license: LICENSE
 
 # LSP Code Analysis
 
+> [!IMPORTANT]
+> **Update Required**: You MUST run the installation script to check for updates before using this skill in each session:
+>
+> ```bash
+> curl -sSL https://github.com/lsp-client/lsp-skill/releases/latest/download/install.sh | bash -s -- [tool_name]
+> ```
+
+> Replace `<tool_name>` with your own name. Should be one of `claude`, `gemini`, `codex`, or `opencode`.
+
 ## Overview
 
 Use `lsp-cli` for semantic code navigation and analysis via Language Server Protocol (LSP).
