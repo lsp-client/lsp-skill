@@ -22,7 +22,7 @@ This document specifies the operational requirements and best practices for the 
 
 ## Overview
 
-You MUST use `lsp` cli tool for semantic code navigation and analysis. It SHOULD be preferred over `read` or `grep` for most code understanding tasks.
+You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and it SHOULD be preferred over `read` or `grep` for most code understanding tasks.
 
 - **Semantic navigation**: Jump to definitions, find references, locate implementations - understands code structure, not just text patterns.
 - **Language-aware**: Distinguishes between variables, functions, classes, types - eliminates false positives from text search.
@@ -58,13 +58,26 @@ Most commands use a unified **Locate String** syntax via the `-L` or `--locate` 
 - `<start>-<end>`: Line range with dash (e.g., `10-20`).
 - `<symbol_path>`: Symbol path with dots (e.g., `MyClass.my_method`).
 
+**Find Pattern (`@<find>`)**:
+
+The optional `@<find>` suffix narrows the target to a **text pattern within the selected scope**:
+
+- The scope is determined by `<scope>` (line/range/symbol). If no `<scope>` is given, the entire file is the scope.
+- `<find>` is matched in a **whitespace-insensitive** way: differences in spaces, tabs, and newlines are ignored.
+- You MAY include the cursor marker `<|>` inside `<find>` to specify the **exact position of interest** within the match (for example, on a variable name, keyword, or operator).
+- If `<find>` is omitted, the command uses the start of the scope (or a tool-specific default) as the navigation target.
+
+**Cursor Marker (`<|>`)**:
+
+The `<|>` marker indicates the exact position for symbol resolution. Use it within the find pattern to point to a specific element (e.g., `user.<|>name` to target the `name` property).
+
 **Examples**:
 
-- `foo.py@self.<|>`
-- `foo.py:42@return <|>result`
-- `foo.py:10,20@if <|>condition`
-- `foo.py:MyClass.my_method@self.<|>`
-- `foo.py:MyClass`
+- `foo.py@self.<|>` - Find `self.` in entire file, position at cursor marker
+- `foo.py:42@return <|>result` - Find `return result` on line 42, position at cursor marker
+- `foo.py:10,20@if <|>condition` - Find `if condition` in lines 10-20, position at cursor marker
+- `foo.py:MyClass.my_method@self.<|>` - Find `self.` within `MyClass.my_method`, position at cursor marker
+- `foo.py:MyClass` - Target the `MyClass` symbol directly
 
 Agents MAY use `lsp locate <string>` with the `-c` or `--check` flag to verify if the target exists in the file and view its context before running other commands.
 
@@ -75,7 +88,7 @@ lsp locate "main.py:42@process_data" --check
 
 ### Outline: File Structure
 
-The `outline` command MUST be used before reading files to obtain a structural overview. It SHOULD be preferred over a full `read` for non-essential code.
+The `outline` command SHOULD be used before reading files to obtain a structural overview, and it SHOULD be preferred over a full `read` for non-essential code.
 
 ```bash
 # Main symbols (classes, functions, methods)
@@ -156,7 +169,7 @@ lsp search "User" --max-items 20 --start-index 0
 The `rename` command facilitates workspace-wide symbol renaming. A two-step workflow MUST be followed: preview then execute.
 
 ```bash
-# Step 1 (REQUIRED): Preview changes and get rename_id
+# Step 1: Preview changes and get rename_id
 lsp rename preview new_name -L "models.py:OldName"
 
 # Step 2: Execute changes using the rename_id from preview
@@ -200,12 +213,38 @@ lsp server stop <path>
 
 #### Understanding Unfamiliar Code
 
+The RECOMMENDED sequence for exploring new codebases:
+
 ```bash
-# Step 1: Scan structure to identify key symbols
+# Step 1: Start with outline - Get file structure without reading implementation
 lsp outline <file_path>
 
-# Step 2: Locate specific symbol to get coordinate info
-lsp symbol -L "<file_path>:<symbol_name>"
+# Step 2: Inspect signatures - Use hover to understand API contracts
+lsp hover -L "<file_path>:<symbol_name>"
+
+# Step 3: Navigate dependencies - Follow definition chains
+lsp definition -L "<file_path>:<symbol_name>"
+
+# Step 4: Map usage - Find where code is called with reference
+lsp reference -L "<file_path>:<symbol_name>"
+```
+
+#### Refactoring Preparation
+
+The REQUIRED steps before modifying code:
+
+```bash
+# Step 1: Find all references - Identify impact scope
+lsp reference -L "<file_path>:<symbol_name>"
+
+# Step 2: Check implementations - For interfaces/abstract classes using --impl
+lsp reference -L "<file_path>:<interface_name>" --impl
+
+# Step 3: Verify type definitions - Understand type propagation with --type
+lsp definition -L "<file_path>:<symbol_name>" --type
+
+# Step 4: Preview Rename - See workspace-wide impact before executing
+lsp rename preview <new_name> -L "<file_path>:<symbol_name>"
 ```
 
 #### Debugging Unknown Behavior
