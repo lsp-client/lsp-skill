@@ -13,14 +13,20 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "Arguments:"
     echo "  tool_name     The AI tool to install for (default: claude)"
     echo "                Supported: claude, gemini, codex, opencode"
-    echo "  install_path  Custom path to install skills (default: ~/.[tool_name]/skills)"
+    echo "  install_path  Custom path to install skills"
+    echo "                Default for opencode: ~/.config/opencode/skill"
+    echo "                Default for others:   ~/.[tool_name]/skills"
     echo ""
     exit 0
 fi
 
 # Determine installation path
 if [ -z "$DEST_BASE" ]; then
-    DEST_BASE="$HOME/.$TOOL/skills"
+    if [ "$TOOL" = "opencode" ]; then
+        DEST_BASE="$HOME/.config/opencode/skill"
+    else
+        DEST_BASE="$HOME/.$TOOL/skills"
+    fi
 fi
 
 SKILL_NAME="lsp-code-analysis"
