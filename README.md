@@ -15,16 +15,18 @@ Instead of guessing file paths or grepping for text, agents using this skill can
 
 ### For AI Agents
 
-If you are an AI agent, follow these steps to install this skill:
+😎 Copy the following prompt to your agent and let it do all the heavy lifting for you:
+
+````markdown
+Please follow these steps to install this skill:
 
 1. Identify what AI agent tool you are (e.g., Claude Code, Gemini, Codex, OpenCode, etc.).
-2. Search online to determine if your tool supports agent skills from agentskills.io.
-3. Determine the correct installation directory for your tool:
+2. Determine the correct installation directory for your tool:
    - Claude Code: `~/.claude/skills/`
    - Gemini: `~/.gemini/skills/`
    - Codex: `~/.codex/skills/`
    - OpenCode: `~/.config/opencode/skill/`
-   - Other tools: Check your tool's documentation.
+   - Other tools: Search online to determine if your tool supports agent skills from agentskills.io. If supported, check your tool's documentation to get the skill directory.
 4. Once you have determined the correct path, run the installation script:
 
    ```bash
@@ -36,6 +38,7 @@ If you are an AI agent, follow these steps to install this skill:
    ```bash
    bash <(curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/scripts/install.sh) ~/.claude/skills/lsp-code-analysis
    ```
+````
 
 ### Using openskills
 
