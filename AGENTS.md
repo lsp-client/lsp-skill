@@ -13,6 +13,7 @@
 
 - **Adhere to RFC 2119**: Use standardized requirement levels (`MUST`, `SHOULD`, `RECOMMENDED`, etc.) to define operational boundaries for agents.
 - **Verify via CLI**: ALWAYS run `lsp <cmd> --help` to verify command syntax, options, and aliases before updating. Never assume features exist without verification.
+- **Show, Don't Tell**: Use bash examples with inline comments instead of bullet-point lists or verbose text descriptions. Agents learn better from concrete examples than abstract explanations.
 - **Actionable Workflows**: Present workflows as sequential code blocks with clear step-by-step comments. Avoid verbose prose descriptions.
 - **Keep it Minimal**: Move implementation details to `references/`. `SKILL.md` serves as the high-level semantic interface.
 - **Frontmatter**: The `description` in frontmatter MUST contain all relevant trigger conditions for the skill.
