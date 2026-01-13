@@ -3,13 +3,11 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Protocol Version](https://img.shields.io/badge/Protocol-v1.0.0--alpha-blue.svg)](references/lsap.md)
 
-> IntelliSense Designed for Coding Agent
+> _IntelliSense Designed for Coding Agent_
 >
 > Check our [website](https://lsp-client.github.io)!
 
 This [agent skill](https://agentskills.io) equips AI agents with the [Language Server Agent Protocol (LSAP)](https://github.com/lsp-client/LSAP), enabling them to navigate, understand, and analyze codebases with the same fidelity as a human developer using VS Code.
-
-Instead of guessing file paths or grepping for text, agents using this skill can "jump to definition", "find references", and "inspect types" deterministically.
 
 ## 📦 Installation
 
@@ -26,7 +24,9 @@ Please follow these steps to install this skill:
    - Gemini: `~/.gemini/skills/`
    - Codex: `~/.codex/skills/`
    - OpenCode: `~/.config/opencode/skill/`
-   - Other tools: Search online to determine if your tool supports agent skills from agentskills.io. If supported, check your tool's documentation to get the skill directory.
+   - Other tools:
+     1. Search online to determine if your tool supports agent skills from `agentskills.io`.
+     2. If supported, check your tool's documentation to get the skill directory.
 3. Once you have determined the correct path, download the latest release and unzip it into that directory.
 
    For example, if you are Claude Code:
@@ -60,23 +60,11 @@ The [`lsp-code-analysis`](skills/lsp-code-analysis/SKILL.md) skill provides **co
 - **📘 Type-Aware**: Get precise type information, signatures, documentation - without reading implementation code.
 - **🗺️ Symbol Outline**: Generate high-level structural maps of files to understand code without reading full implementations.
 
-**Use cases**: Exploring unfamiliar code, refactoring, debugging, understanding dependencies. **Prefer over grep/text search** when you need to understand how code works, not just where text appears.
-
 ## 🚀 Getting Started
-
-### Prerequisites
-
-This skill requires the [lsp-cli](https://github.com/lsp-client/lsp-cli) tool to be installed in the environment where the agent runs.
-
-```bash
-uv tool install --python 3.13 lsp-cli
-```
-
-> Actually you can skip this step since agent will do it for you 😉
 
 ### How it Works
 
-This skill wraps the `lsp` command line tool, which acts as a bridge between the agent and standard Language Servers (like **basedpyright**, **typescript-language-server**, **rust-analyzer**).
+This skill wraps the `lsp` command line tool, which acts as a bridge between the agent and standard Language Servers (like `basedpyright`, ``typescript-language-server`, `rust-analyzer`).
 
 When an agent invokes this skill:
 
@@ -97,11 +85,12 @@ This skill currently provides out-of-the-box support for the following languages
 | **Deno**                    | [deno lsp](https://deno.land/)                                                                         |
 | **Java**                    | [jdtls](https://github.com/eclipse/eclipse.jdt.ls)                                                     |
 
-More language support coming very very soon!
+_More language support coming very very soon!_
 
 ## 📚 Documentation
 
 - **[Skill Reference](skills/lsp-code-analysis/SKILL.md)**: Complete command reference and best practices.
+- **[Configuration Guide](skills/lsp-code-analysis/references/configuration.md)**: Customizing `lsp-cli` settings and environment variables.
 - **[Frontend Best Practices](skills/lsp-code-analysis/references/bp_frontend.md)**: LSP workflows for frontend development.
 - **[Backend Best Practices](skills/lsp-code-analysis/references/bp_backend.md)**: LSP workflows for backend development.
 
@@ -155,7 +144,6 @@ These three layers of extensibility work together: the **foundation** provides r
 
 This repository is a self-contained Agent Skill that bundles:
 
-- **LSP CLI Engine**: Core engine for LSAP (in `src/` and `tests/`)
 - **Skill Definition**: [skills/lsp-code-analysis/SKILL.md](skills/lsp-code-analysis/SKILL.md)
 - **Best Practice Guides**: [skills/lsp-code-analysis/references/](skills/lsp-code-analysis/references/)
 - **Protocol Specs**: [LSAP Reference](lib-references/LSAP/)

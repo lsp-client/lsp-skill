@@ -14,9 +14,22 @@ trap cleanup EXIT INT TERM
 
 # Automatically detect skill directory (parent of scripts/)
 SKILL_DIR=$(cd "$(dirname "$0")/.." && pwd)
+VERSION_FILE="$SKILL_DIR/.version"
 
 # Validate SKILL.md exists
 [ -f "$SKILL_DIR/SKILL.md" ] || { echo "Error: SKILL.md not found in '$SKILL_DIR'."; exit 1; }
+
+echo "Checking lsp-cli installation..."
+uv tool install --python 3.13 lsp-cli@latest
+LATEST_CLI_VERSION=$(uv tool list | grep "^lsp-cli " | awk '{print $2}' | sed 's/^v//')
+CURRENT_CLI_VERSION=$(cat "$VERSION_FILE" 2>/dev/null || echo "unknown")
+
+if [ "$LATEST_CLI_VERSION" = "$CURRENT_CLI_VERSION" ]; then
+    echo "✓ $SKILL_NAME is already up to date (lsp-cli version $LATEST_CLI_VERSION)."
+    exit 0
+fi
+
+echo "lsp-cli version mismatch ($CURRENT_CLI_VERSION -> $LATEST_CLI_VERSION). Proceeding with update..."
 
 # Get current version from SKILL.md
 CURRENT_VERSION=$(grep "^version:" "$SKILL_DIR/SKILL.md" | sed 's/^version: *//' || echo "unknown")
@@ -36,7 +49,7 @@ else
 
     # Strip leading 'v' from versions for comparison
     if [ "${LATEST_VERSION#v}" = "${CURRENT_VERSION#v}" ]; then
-        echo "✓ $SKILL_NAME is already at the latest version."
+        echo "✓ $SKILL_NAME files are already at the latest version."
     else
         echo "Updating $SKILL_NAME to $LATEST_VERSION..."
 
@@ -57,8 +70,8 @@ else
 
         if [ -n "$SKILL_PATH" ]; then
             EXTRACTED_SKILL_DIR=$(dirname "$SKILL_PATH")
-            # Remove old content (except hidden files)
-            find "$SKILL_DIR" -mindepth 1 -not -name '.*' -exec rm -rf {} + 2>/dev/null || true
+            # Remove old content (except hidden files and scripts directory)
+            find "$SKILL_DIR" -mindepth 1 -not -name '.*' -not -name 'scripts' -exec rm -rf {} + 2>/dev/null || true
             # Copy new content (including hidden files)
             cp -r "$EXTRACTED_SKILL_DIR"/. "$SKILL_DIR/"
             echo "✓ Successfully updated $SKILL_NAME to $LATEST_VERSION."
@@ -69,23 +82,7 @@ else
     fi
 fi
 
-# Check for lsp-cli and install/upgrade
-echo ""
-echo "Checking lsp-cli installation..."
-
-if command -v lsp >/dev/null 2>&1; then
-    echo "✓ lsp-cli is installed."
-    command -v uv >/dev/null 2>&1 && uv tool upgrade lsp-cli 2>/dev/null && echo "✓ lsp-cli upgraded."
-else
-    echo "⚠ lsp-cli is not installed."
-    if command -v uv >/dev/null 2>&1; then
-        echo "Installing lsp-cli..."
-        uv tool install --python 3.13 lsp-cli && echo "✓ lsp-cli installed successfully." || { echo "Error: Failed to install lsp-cli."; exit 1; }
-    else
-        echo "Error: uv not found. Install uv from https://astral.sh/uv"
-        echo "Then run: uv tool install --python 3.13 lsp-cli"
-        exit 1
-    fi
-fi
+# Update .version file to match lsp-cli version
+echo "$LATEST_CLI_VERSION" > "$VERSION_FILE"
 
 echo "Setup complete! The lsp-code-analysis skill is ready."

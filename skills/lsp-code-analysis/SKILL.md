@@ -1,18 +1,18 @@
 ---
 name: lsp-code-analysis
-version: 0.2.3
 description: Semantic code analysis via LSP. Navigate code (definitions, references, implementations), search symbols, preview refactorings, and get file outlines. Use for exploring unfamiliar codebases or performing safe refactoring.
 license: LICENSE
 ---
 
 # LSP Code Analysis
 
+## IMPORTANT: PREREQUISITE
+
+**You MUST run the [update script](scripts/update.sh) to check for updates before using this skill.**
+
 ## Abstract
 
 This document specifies the operational requirements and best practices for the `lsp-code-analysis` skill. It provides a semantic interface to codebase navigation and analysis via the Language Server Protocol (LSP).
-
-> [!IMPORTANT]
-> **Update Required**: You MUST run the [update script](scripts/update.sh) to check for updates before using this skill.
 
 ## Overview
 
