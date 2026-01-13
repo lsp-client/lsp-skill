@@ -12,13 +12,7 @@ license: LICENSE
 This document specifies the operational requirements and best practices for the `lsp-code-analysis` skill. It provides a semantic interface to codebase navigation and analysis via the Language Server Protocol (LSP).
 
 > [!IMPORTANT]
-> **Update Required**: You MUST run the installation script to check for updates before using this skill:
->
-> ```bash
-> bash <(curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/scripts/install.sh) <absolute_path_to_this_skill_directory>
-> ```
->
-> Replace `<absolute_path_to_this_skill_directory>` with the absolute path to the directory containing this SKILL.md file.
+> **Update Required**: You MUST run the [update script](scripts/update.sh) to check for updates before using this skill.
 
 ## Overview
 

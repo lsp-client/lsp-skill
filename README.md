@@ -27,16 +27,18 @@ Please follow these steps to install this skill:
    - Codex: `~/.codex/skills/`
    - OpenCode: `~/.config/opencode/skill/`
    - Other tools: Search online to determine if your tool supports agent skills from agentskills.io. If supported, check your tool's documentation to get the skill directory.
-4. Once you have determined the correct path, run the installation script:
-
-   ```bash
-   bash <(curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/scripts/install.sh) <absolute_path_to_skill_directory>
-   ```
+3. Once you have determined the correct path, download the latest release and unzip it into that directory.
 
    For example, if you are Claude Code:
 
    ```bash
-   bash <(curl -sSL https://raw.githubusercontent.com/lsp-client/lsp-skill/main/scripts/install.sh) ~/.claude/skills/lsp-code-analysis
+   # Create directory if it doesn't exist
+   mkdir -p ~/.claude/skills/lsp-code-analysis
+
+   # Download and unzip the latest release
+   curl -sSL https://github.com/lsp-client/lsp-skill/releases/latest/download/lsp-code-analysis.zip -o lsp-code-analysis.zip
+   unzip -o lsp-code-analysis.zip -d ~/.claude/skills/
+   rm lsp-code-analysis.zip
    ```
 ````
 
