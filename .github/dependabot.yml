@@ -1,0 +1,24 @@
+version: 2
+updates:
+  # Enable version updates for pip
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    # Allow up to 10 open pull requests for pip dependencies
+    open-pull-requests-limit: 10
+    # Prefix commit messages
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Group all patch updates together
+    groups:
+      patch-updates:
+        update-types:
+          - "patch"
+    # Automatically label pull requests
+    labels:
+      - "dependencies"
+      - "python"
