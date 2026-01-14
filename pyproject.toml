@@ -1,6 +1,6 @@
 [project]
 name = "lsp-cli"
-version = "0.3.1"
+version = "0.3.2"
 description = "A powerful command-line interface for the Language Server Agent Protocol (LSAP)"
 readme = "README.md"
 authors = [{ name = "observerw", email = "wozluohd@gmail.com" }]

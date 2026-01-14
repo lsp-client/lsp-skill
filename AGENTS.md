@@ -9,9 +9,13 @@
 
 ## Release Workflow
 
-When releasing a new version, update the version number in the following locations:
-- `pyproject.toml`: `[project] -> version`
-- `skills/lsp-code-analysis/.version`
+1. Update version in `pyproject.toml` and `skills/lsp-code-analysis/.version`
+2. Run `just check` and `just test`
+3. Commit: `git add . && git commit -m "Bump version to x.y.z"`
+4. Release: `just release x.y.z` (creates tag and pushes)
+5. GitHub Actions will automatically:
+   - Stable (`v*.*.*`): Publish to PyPI + GitHub Release
+   - Beta (`v*.*.*-beta.*`): Publish to TestPyPI + Pre-release
 
 ## Code Style Guidelines
 
