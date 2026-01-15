@@ -49,7 +49,7 @@ class Manager:
             f"[Manager] Manager log initialized at {log_path} (level: {log_level})"
         )
 
-    async def create_client(self, path: Path, cwd: Path | None = None) -> Path:
+    async def create_client(self, path: Path, cwd: Path) -> Path:
         target = find_client(path, cwd)
         if not target:
             raise NotFoundException(f"No LSP client found for path: {path}")
@@ -77,16 +77,14 @@ class Manager:
             logger.info(f"[Manager] Removing client: {client.id}")
             self._clients.pop(client.id, None)
 
-    async def delete_client(self, path: Path, cwd: Path | None = None):
+    async def delete_client(self, path: Path, cwd: Path):
         if target := find_client(path, cwd):
             client_id = get_client_id(target)
             if client := self._clients.get(client_id):
                 logger.info(f"[Manager] Stopping client: {client_id}")
                 client.stop()
 
-    def inspect_client(
-        self, path: Path, cwd: Path | None = None
-    ) -> ManagedClientInfo | None:
+    def inspect_client(self, path: Path, cwd: Path) -> ManagedClientInfo | None:
         if target := find_client(path, cwd):
             client_id = get_client_id(target)
             if client := self._clients.get(client_id):
