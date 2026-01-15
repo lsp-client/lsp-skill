@@ -47,5 +47,6 @@ def connect_manager() -> HttpClient:
         httpx.Client(
             transport=httpx.HTTPTransport(uds=str(MANAGER_UDS_PATH), retries=5),
             base_url="http://localhost",
+            timeout=30.0,
         )
     )

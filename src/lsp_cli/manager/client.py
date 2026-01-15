@@ -10,11 +10,11 @@ import loguru
 import uvicorn
 import xxhash
 from attrs import define, field
-from litestar import Litestar
+from litestar import Litestar, Request, Response
 from loguru import logger as global_logger
 
 from lsp_cli.client import ClientTarget
-from lsp_cli.manager.capability import CapabilityController, Capabilities
+from lsp_cli.manager.capability import Capabilities, CapabilityController
 from lsp_cli.settings import LOG_DIR, RUNTIME_DIR, settings
 
 from .models import ManagedClientInfo
@@ -101,8 +101,6 @@ class ManagedClient:
         self._server_scope.cancel()
 
     async def _serve(self) -> None:
-        from litestar import Request, Response
-
         @asynccontextmanager
         async def lifespan(app: Litestar) -> AsyncGenerator[None]:
             async with self.target.client_cls(

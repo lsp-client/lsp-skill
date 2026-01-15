@@ -6,9 +6,9 @@ from lsap.schema.models import SymbolKind
 from lsap.schema.outline import OutlineRequest, OutlineResponse
 
 from lsp_cli.utils.sync import cli_syncify
+
 from . import options as op
 from .shared import managed_client
-
 
 app = typer.Typer()
 

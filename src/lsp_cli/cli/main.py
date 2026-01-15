@@ -1,6 +1,8 @@
 import sys
+
 import typer
 from loguru import logger
+
 from lsp_cli.settings import settings
 
 

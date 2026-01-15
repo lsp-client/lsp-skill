@@ -6,7 +6,6 @@ from lsp_cli.utils.sync import cli_syncify
 from . import options as op
 from .shared import create_locate, managed_client
 
-
 app = typer.Typer()
 
 
