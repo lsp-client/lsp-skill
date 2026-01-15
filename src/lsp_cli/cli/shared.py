@@ -28,7 +28,7 @@ async def managed_client(path: Path) -> AsyncGenerator[AsyncHttpClient]:
         info = client.post(
             "/create",
             CreateClientResponse,
-            json=CreateClientRequest(path=path),
+            json=CreateClientRequest(path=path, cwd=Path.cwd()),
         )
         assert info is not None
 
