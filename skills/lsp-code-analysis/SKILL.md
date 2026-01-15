@@ -29,13 +29,13 @@ You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and
 
 ### Tool Selection
 
-| Task                | Traditional Tool | Recommended LSP Command                        |
-| ------------------- | ---------------- | ---------------------------------------------- |
-| **Find Definition** | `grep`, `read`   | [`definition`](#definition-navigate-to-source) |
-| **Find Usages**     | `grep -r`        | [`reference`](#reference-find-all-usages)      |
-| **Understand File** | `read`           | [`outline`](#outline-file-structure)           |
-| **View Docs/Types** | `read`           | [`doc`](#doc-get-documentation)                |
-| **Refactor**        | `sed`            | [`rename`](#rename-safe-refactoring)           |
+| Task                | Traditional Tool | Recommended LSP Command                         |
+| ------------------- | ---------------- | ----------------------------------------------- |
+| **Find Definition** | `grep`, `read`   | [`definition`](#definition-navigate-to-source)  |
+| **Find Usages**     | `grep -r`        | [`reference`](#reference-find-all-usages)       |
+| **Understand File** | `read`           | [`outline`](#outline-file-structure)            |
+| **View Docs/Types** | `read`           | [`doc`](#doc-get-documentation)                 |
+| **Refactor**        | `sed`            | See [Refactoring Guide](references/refactor.md) |
 
 **Guideline**: Agents SHOULD prioritize LSP commands for code navigation and analysis. Agents MAY use `read` or `grep` ONLY when semantic analysis is not applicable (e.g., searching for comments or literal strings).
 
@@ -171,22 +171,9 @@ lsp search "User" --max-items 20 --start-index 0
 
 Agents SHOULD use `--kind` to filter results and reduce noise.
 
-### Rename: Safe Refactoring
+### Refactoring Operations
 
-Workspace-wide symbol renaming with preview-then-execute workflow.
-
-```bash
-# Step 1: Preview changes and get rename_id
-lsp rename preview new_name -L "models.py:OldName"
-
-# Step 2: Execute changes using the rename_id from preview
-lsp rename execute <rename_id>
-
-# Execute with file/directory exclusions
-lsp rename execute <rename_id> --exclude tests/test_old.py --exclude legacy/
-```
-
-Agents MUST preview before executing to verify changes.
+Read [Refactoring Guide](references/refactor.md) for rename, extract, and other safe refactoring operations.
 
 ### Symbol: Get Complete Symbol Code
 
@@ -243,24 +230,6 @@ lsp definition -L "<file_path>:<symbol_name>"
 
 # Step 4: Map usage - Find where code is called with reference
 lsp reference -L "<file_path>:<symbol_name>"
-```
-
-#### Refactoring Preparation
-
-The REQUIRED steps before modifying code:
-
-```bash
-# Step 1: Find all references - Identify impact scope
-lsp reference -L "<file_path>:<symbol_name>"
-
-# Step 2: Check implementations - For interfaces/abstract classes using --impl
-lsp reference -L "<file_path>:<interface_name>" --impl
-
-# Step 3: Verify type definitions - Understand type propagation with --type
-lsp definition -L "<file_path>:<symbol_name>" --type
-
-# Step 4: Preview Rename - See workspace-wide impact before executing
-lsp rename preview <new_name> -L "<file_path>:<symbol_name>"
 ```
 
 #### Debugging Unknown Behavior
