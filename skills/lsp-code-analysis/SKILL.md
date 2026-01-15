@@ -10,7 +10,9 @@ license: LICENSE
 
 **You MUST run the [update script](scripts/update.sh) to check for updates before using this skill.**
 
-**Before any LSP operations**, you MUST first run `lsp server start <project_path>` to verify project support. If it fails, inform the user that LSP analysis is unavailable for this project.
+Before any LSP operations, you **MUST first run `lsp server start <project_path>` to verify project support**.
+
+**IF YOU DO NOT PERFORM THESE STEPS, YOU ARE NOT ALLOWED TO USE THIS SKILL.**
 
 ## Abstract
 
@@ -32,7 +34,7 @@ You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and
 | **Find Definition** | `grep`, `read`   | [`definition`](#definition-navigate-to-source) |
 | **Find Usages**     | `grep -r`        | [`reference`](#reference-find-all-usages)      |
 | **Understand File** | `read`           | [`outline`](#outline-file-structure)           |
-| **View Docs/Types** | `read`           | [`doc`](#doc-get-documentation)               |
+| **View Docs/Types** | `read`           | [`doc`](#doc-get-documentation)                |
 | **Refactor**        | `sed`            | [`rename`](#rename-safe-refactoring)           |
 
 **Guideline**: Agents SHOULD prioritize LSP commands for code navigation and analysis. Agents MAY use `read` or `grep` ONLY when semantic analysis is not applicable (e.g., searching for comments or literal strings).
