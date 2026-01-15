@@ -32,7 +32,7 @@ You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and
 | **Find Definition** | `grep`, `read`   | [`definition`](#definition-navigate-to-source) |
 | **Find Usages**     | `grep -r`        | [`reference`](#reference-find-all-usages)      |
 | **Understand File** | `read`           | [`outline`](#outline-file-structure)           |
-| **View Docs/Types** | `read`           | [`doc`](#doc-get-documentation)               |
+| **View Docs/Types** | `read`           | [`doc`](#doc-get-documentation)                |
 | **Refactor**        | `sed`            | [`rename`](#rename-safe-refactoring)           |
 
 **Guideline**: Agents SHOULD prioritize LSP commands for code navigation and analysis. Agents MAY use `read` or `grep` ONLY when semantic analysis is not applicable (e.g., searching for comments or literal strings).
@@ -46,6 +46,8 @@ All commands support `-h` or `--help`.
 Most commands use a unified **Locate String** syntax via the `-L` or `--locate` option.
 
 **Syntax**: `<file_path>[:<scope>][@<find>]`
+
+For Monorepo or Multi-root workspaces, see [monorepo.md](references/monorepo.md).
 
 **Scope Formats**:
 
@@ -331,5 +333,6 @@ lsp locate "main.py:42@process<|>" --check
 
 For specialized scenarios, see:
 
+- **Monorepo**: [monorepo.md](references/monorepo.md)
 - **Frontend**: [bp_frontend.md](references/bp_frontend.md)
 - **Backend**: [bp_backend.md](references/bp_backend.md)
