@@ -28,6 +28,7 @@ class ManagedClientInfoList(RootModel[list[ManagedClientInfo]]):
 
 class CreateClientRequest(BaseModel):
     path: Path
+    cwd: Path | None = None
 
 
 class CreateClientResponse(BaseModel):
@@ -37,6 +38,7 @@ class CreateClientResponse(BaseModel):
 
 class DeleteClientRequest(BaseModel):
     path: Path
+    cwd: Path | None = None
 
 
 class DeleteClientResponse(BaseModel):

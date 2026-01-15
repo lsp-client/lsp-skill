@@ -49,8 +49,8 @@ class Manager:
             f"[Manager] Manager log initialized at {log_path} (level: {log_level})"
         )
 
-    async def create_client(self, path: Path) -> Path:
-        target = find_client(path)
+    async def create_client(self, path: Path, cwd: Path | None = None) -> Path:
+        target = find_client(path, cwd)
         if not target:
             raise NotFoundException(f"No LSP client found for path: {path}")
 
@@ -77,15 +77,17 @@ class Manager:
             logger.info(f"[Manager] Removing client: {client.id}")
             self._clients.pop(client.id, None)
 
-    async def delete_client(self, path: Path):
-        if target := find_client(path):
+    async def delete_client(self, path: Path, cwd: Path | None = None):
+        if target := find_client(path, cwd):
             client_id = get_client_id(target)
             if client := self._clients.get(client_id):
                 logger.info(f"[Manager] Stopping client: {client_id}")
                 client.stop()
 
-    def inspect_client(self, path: Path) -> ManagedClientInfo | None:
-        if target := find_client(path):
+    def inspect_client(
+        self, path: Path, cwd: Path | None = None
+    ) -> ManagedClientInfo | None:
+        if target := find_client(path, cwd):
             client_id = get_client_id(target)
             if client := self._clients.get(client_id):
                 return client.info
@@ -131,8 +133,8 @@ async def create_client_handler(
     data: CreateClientRequest, state: State
 ) -> CreateClientResponse:
     manager = get_manager(state)
-    uds_path = await manager.create_client(data.path)
-    info = manager.inspect_client(data.path)
+    uds_path = await manager.create_client(data.path, data.cwd)
+    info = manager.inspect_client(data.path, data.cwd)
     if not info:
         raise RuntimeError("Failed to create client")
 
@@ -144,8 +146,8 @@ async def delete_client_handler(
     data: DeleteClientRequest, state: State
 ) -> DeleteClientResponse:
     manager = get_manager(state)
-    info = manager.inspect_client(data.path)
-    await manager.delete_client(data.path)
+    info = manager.inspect_client(data.path, data.cwd)
+    await manager.delete_client(data.path, data.cwd)
 
     return DeleteClientResponse(info=info)
 

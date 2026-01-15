@@ -13,14 +13,14 @@ from attrs import define, field
 from litestar import Litestar
 from loguru import logger as global_logger
 
-from lsp_cli.client import TargetClient
+from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import CapabilityController, Capabilities
 from lsp_cli.settings import LOG_DIR, RUNTIME_DIR, settings
 
 from .models import ManagedClientInfo
 
 
-def get_client_id(target: TargetClient) -> str:
+def get_client_id(target: ClientTarget) -> str:
     kind = target.client_cls.get_language_config().kind
     path_hash = xxhash.xxh32_hexdigest(target.project_path.as_posix())
     return f"{kind.value}-{path_hash}-default"
@@ -28,7 +28,7 @@ def get_client_id(target: TargetClient) -> str:
 
 @define
 class ManagedClient:
-    target: TargetClient
+    target: ClientTarget
 
     _server: uvicorn.Server = field(init=False)
     _timeout_scope: anyio.CancelScope = field(init=False)
