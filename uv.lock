@@ -278,7 +278,7 @@ requires-dist = [
     { name = "litestar", specifier = ">=2.19.0" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "lsap-sdk", specifier = ">=0.1.0" },
-    { name = "lsp-client", specifier = ">=0.3.1" },
+    { name = "lsp-client", specifier = ">=0.3.2" },
     { name = "platformdirs", specifier = ">=4.5.1" },
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
@@ -299,7 +299,7 @@ dev = [
 
 [[package]]
 name = "lsp-client"
-version = "0.3.1"
+version = "0.3.2"
 source = { registry = "https://mirrors.aliyun.com/pypi/simple" }
 dependencies = [
     { name = "aioshutil" },
@@ -312,9 +312,9 @@ dependencies = [
     { name = "semver" },
     { name = "tenacity" },
 ]
-sdist = { url = "https://mirrors.aliyun.com/pypi/packages/5a/9b/056f4e022d20bc28c2e1d6575e5a01b50a4546e942d9e5d68e06c491d895/lsp_client-0.3.1.tar.gz", hash = "sha256:9c1ffaa173f81a4a3855f8df5bbe5e11f187b21a23d143a26a161f04d5f083ab" }
+sdist = { url = "https://mirrors.aliyun.com/pypi/packages/b8/9a/3be8e1e35da7e1d260ff905176892e0c7c56a936aceea2e44e4296cb9d33/lsp_client-0.3.2.tar.gz", hash = "sha256:a0ed12ff570035c77e708df6bf3f7b0673292f9b08b4a07e6ca69878e5b9f2b4" }
 wheels = [
-    { url = "https://mirrors.aliyun.com/pypi/packages/ea/ef/06660e5fffec9b62f8b1f147eebdabc5ac6c06768d8617d5b2dfb9d4cb3a/lsp_client-0.3.1-py3-none-any.whl", hash = "sha256:6036e87758457a5c6d755d958e1fccabbbd057666316d043639a1f43d04c8f30" },
+    { url = "https://mirrors.aliyun.com/pypi/packages/37/43/14b44ac6ae9de890cb9269fed4e469da57f3d3abe723485b3cbf8605e065/lsp_client-0.3.2-py3-none-any.whl", hash = "sha256:22c6c05e06fc64274785e5bbcd6334ff82e0cb892d98cdbd2e1b5cf8824cc6e7" },
 ]
 
 [[package]]
