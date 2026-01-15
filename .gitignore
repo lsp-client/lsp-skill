@@ -11,4 +11,4 @@ wheels/
 # Virtual environments
 .venv
 
-references/
+/references/
