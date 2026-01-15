@@ -32,7 +32,7 @@ You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and
 | **Find Definition** | `grep`, `read`   | [`definition`](#definition-navigate-to-source) |
 | **Find Usages**     | `grep -r`        | [`reference`](#reference-find-all-usages)      |
 | **Understand File** | `read`           | [`outline`](#outline-file-structure)           |
-| **View Docs/Types** | `read`           | [`hover`](#hover-get-documentation)            |
+| **View Docs/Types** | `read`           | [`doc`](#doc-get-documentation)               |
 | **Refactor**        | `sed`            | [`rename`](#rename-safe-refactoring)           |
 
 **Guideline**: Agents SHOULD prioritize LSP commands for code navigation and analysis. Agents MAY use `read` or `grep` ONLY when semantic analysis is not applicable (e.g., searching for comments or literal strings).
@@ -132,19 +132,19 @@ lsp reference -L "app.py:10@TestClass" --context-lines 5
 lsp reference -L "utils.py:helper" --max-items 50 --start-index 0
 ```
 
-### Hover: Get Documentation
+### Doc: Get Documentation
 
 Get documentation and type information without navigating to source.
 
 ```bash
 # Get docstring and type info for symbol at line 42
-lsp hover -L "main.py:42"
+lsp doc -L "main.py:42"
 
 # Get API documentation for process_data function
-lsp hover -L "models.py@process_data<|>"
+lsp doc -L "models.py@process_data<|>"
 ```
 
-Agents SHOULD prefer `hover` over `read` when only documentation or type information is needed.
+Agents SHOULD prefer `doc` over `read` when only documentation or type information is needed.
 
 ### Search: Global Symbol Search
 
@@ -231,8 +231,8 @@ The RECOMMENDED sequence for exploring new codebases:
 # Step 1: Start with outline - Get file structure without reading implementation
 lsp outline <file_path>
 
-# Step 2: Inspect signatures - Use hover to understand API contracts
-lsp hover -L "<file_path>:<symbol_name>"
+# Step 2: Inspect signatures - Use doc to understand API contracts
+lsp doc -L "<file_path>:<symbol_name>"
 
 # Step 3: Navigate dependencies - Follow definition chains
 lsp definition -L "<file_path>:<symbol_name>"
@@ -292,7 +292,7 @@ lsp search "UserDTO" --kind class
 lsp reference -L "models.py:UserDTO"
 
 # Step 3: Check transformations
-lsp hover -L "transform.py:map_to_dto"
+lsp doc -L "transform.py:map_to_dto"
 ```
 
 ### Understanding Type Hierarchies
@@ -320,8 +320,8 @@ lsp definition -L "models.py:User.Profile.validate"
 # Limit results in large codebases
 lsp search "User" --max-items 20
 
-# Use hover to understand APIs without navigating to source
-lsp hover -L "api.py:fetch_data"  # Get docs/types without jumping to definition
+# Use doc to understand APIs without navigating to source
+lsp doc -L "api.py:fetch_data"  # Get docs/types without jumping to definition
 
 # Verify locate strings if commands fail
 lsp locate "main.py:42@process<|>" --check

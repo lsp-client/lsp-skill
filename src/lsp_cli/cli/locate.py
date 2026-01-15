@@ -5,7 +5,8 @@ from lsap.schema.locate import LocateRequest, LocateResponse
 
 from lsp_cli.utils.sync import cli_syncify
 
-from .shared import create_locate, managed_client, print_resp
+from .shared import create_locate, managed_client
+
 
 app = typer.Typer()
 
@@ -56,7 +57,7 @@ async def get_location(
         )
 
     if resp_obj:
-        print_resp(resp_obj)
+        print(resp_obj.format())
     elif check:
         raise RuntimeError(f"Target '{locate}' not found")
     else:

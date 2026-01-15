@@ -12,7 +12,8 @@ from lsap.schema.rename import (
 from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
-from .shared import create_locate, managed_client, print_resp
+from .shared import create_locate, managed_client
+
 
 app = typer.Typer(name="rename", help="Rename a symbol at a specific location.")
 
@@ -37,7 +38,7 @@ async def rename_preview(
         )
 
         if resp_obj:
-            print_resp(resp_obj)
+            print(resp_obj.format())
         else:
             print("Warning: No rename possibilities found at the location")
 
@@ -88,6 +89,6 @@ async def rename_execute(
         )
 
         if resp_obj:
-            print_resp(resp_obj)
+            print(resp_obj.format())
         else:
             raise RuntimeError("Failed to execute rename")

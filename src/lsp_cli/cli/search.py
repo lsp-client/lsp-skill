@@ -9,7 +9,8 @@ from lsp_cli.settings import settings
 from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
-from .shared import managed_client, print_resp
+from .shared import managed_client
+
 
 app = typer.Typer()
 
@@ -58,7 +59,7 @@ async def search(
         )
 
     if resp_obj and resp_obj.items:
-        print_resp(resp_obj)
+        print(resp_obj.format())
         if effective_max_items and len(resp_obj.items) >= effective_max_items:
             print(
                 f"\nInfo: Showing {effective_max_items} results. Use --max-items to see more."

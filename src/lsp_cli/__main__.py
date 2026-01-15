@@ -5,7 +5,7 @@ import typer
 
 from lsp_cli.cli import (
     definition,
-    hover,
+    doc,
     locate,
     outline,
     reference,
@@ -37,7 +37,7 @@ app.callback(invoke_without_command=True)(main_callback)
 app.add_typer(server_app)
 app.add_typer(rename.app)
 app.add_typer(definition.app)
-app.add_typer(hover.app)
+app.add_typer(doc.app)
 app.add_typer(locate.app)
 app.add_typer(reference.app)
 app.add_typer(outline.app)

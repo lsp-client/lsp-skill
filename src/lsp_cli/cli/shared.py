@@ -62,10 +62,6 @@ def create_locate(locate_str: str) -> Locate:
     return locate
 
 
-def print_resp(resp):
-    print(resp.format())
-
-
 def get_msg(err: Exception | ExceptionGroup) -> str:
     match err:
         case ExceptionGroup():

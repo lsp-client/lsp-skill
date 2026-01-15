@@ -8,7 +8,7 @@ from lsap.capability.definition import (
     DefinitionRequest,
     DefinitionResponse,
 )
-from lsap.capability.hover import HoverCapability, HoverRequest, HoverResponse
+from lsap.capability.doc import DocCapability, DocRequest, DocResponse
 from lsap.capability.locate import LocateCapability, LocateRequest, LocateResponse
 from lsap.capability.outline import OutlineCapability, OutlineRequest, OutlineResponse
 from lsap.capability.reference import (
@@ -32,7 +32,7 @@ from lsp_client import Client
 @frozen
 class Capabilities:
     definition: DefinitionCapability
-    hover: HoverCapability
+    doc: DocCapability
     locate: LocateCapability
     outline: OutlineCapability
     reference: ReferenceCapability
@@ -45,7 +45,7 @@ class Capabilities:
     def build(cls, client: Client) -> Self:
         return cls(
             definition=DefinitionCapability(client),
-            hover=HoverCapability(client),
+            doc=DocCapability(client),
             locate=LocateCapability(client),
             outline=OutlineCapability(client),
             reference=ReferenceCapability(client),
@@ -66,8 +66,8 @@ class CapabilityController(Controller):
         return await state.capabilities.definition(data)
 
     @post("/hover")
-    async def hover(self, data: HoverRequest, state: State) -> HoverResponse | None:
-        return await state.capabilities.hover(data)
+    async def hover(self, data: DocRequest, state: State) -> DocResponse | None:
+        return await state.capabilities.doc(data)
 
     @post("/locate")
     async def locate(self, data: LocateRequest, state: State) -> LocateResponse | None:

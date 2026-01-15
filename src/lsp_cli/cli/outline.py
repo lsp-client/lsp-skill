@@ -7,7 +7,8 @@ from lsap.schema.outline import OutlineRequest, OutlineResponse
 
 from lsp_cli.utils.sync import cli_syncify
 
-from .shared import managed_client, print_resp
+from .shared import managed_client
+
 
 app = typer.Typer()
 
@@ -62,6 +63,6 @@ async def get_outline(
             if not filtered_items:
                 print("Warning: No symbols found (use --all to show local variables)")
                 return
-        print_resp(resp_obj)
+        print(resp_obj.format())
     else:
         print("Warning: No symbols found")
