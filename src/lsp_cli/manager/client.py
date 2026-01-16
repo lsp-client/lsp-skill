@@ -104,7 +104,8 @@ class ManagedClient:
         @asynccontextmanager
         async def lifespan(app: Litestar) -> AsyncGenerator[None]:
             async with self.target.client_cls(
-                workspace=self.target.project_path
+                workspace=self.target.project_path,
+                request_timeout=120,
             ) as client:
                 app.state.client = client
                 app.state.capabilities = Capabilities.build(client)
@@ -124,12 +125,7 @@ class ManagedClient:
             exception_handlers={Exception: exception_handler},
         )
 
-        config = uvicorn.Config(
-            app,
-            uds=str(self.uds_path),
-            loop="asyncio",
-            log_config=None,  # Disable default uvicorn logging
-        )
+        config = uvicorn.Config(app, uds=str(self.uds_path), loop="asyncio")
         self._server = uvicorn.Server(config)
 
         async with asyncer.create_task_group() as tg:
