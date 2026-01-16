@@ -77,9 +77,26 @@ def get_msg(err: Exception | ExceptionGroup) -> str:
                 msgs.append(m)
             return "\n".join(msgs)
         case httpx.HTTPStatusError():
-            data = err.response.json()
-            if isinstance(data, dict) and "detail" in data:
-                return clean_error_msg(str(data["detail"]))
+            try:
+                data = err.response.json()
+                if isinstance(data, dict):
+                    if "detail" in data:
+                        detail = str(data["detail"])
+                        error_type = data.get("error_type", "")
+                        request_path = data.get("request_path", "")
+
+                        msg_parts = []
+                        if error_type:
+                            msg_parts.append(f"[{error_type}]")
+                        if request_path:
+                            msg_parts.append(f"at {request_path}:")
+                        msg_parts.append(detail)
+
+                        return clean_error_msg(" ".join(msg_parts))
+                    return clean_error_msg(str(data))
+            except (ValueError, KeyError):  # JSON parsing or key access errors
+                # If JSON parsing fails, fall back to string representation
+                pass
             return clean_error_msg(str(err))
         case ValueError():
             msg = str(err)

@@ -113,8 +113,30 @@ class ManagedClient:
 
         def exception_handler(request: Request, exc: Exception) -> Response:
             self._logger.exception("Unhandled exception in Litestar: {}", exc)
+
+            # Extract meaningful error message
+            error_msg = str(exc)
+            error_type = type(exc).__name__
+
+            # Handle ExceptionGroup specially to extract the actual error
+            if isinstance(exc, ExceptionGroup):
+                # Get the first exception from the group
+                errors = []
+                for e in exc.exceptions:
+                    if isinstance(e, ExceptionGroup):
+                        # Recursively extract nested exception groups
+                        errors.extend([str(se) for se in e.exceptions])
+                    else:
+                        errors.append(f"{type(e).__name__}: {e!s}")
+                error_msg = "\n".join(errors)
+                error_type = "ExceptionGroup"
+
             return Response(
-                content={"detail": str(exc)},
+                content={
+                    "detail": error_msg,
+                    "error_type": error_type,
+                    "request_path": str(request.url.path),
+                },
                 status_code=500,
             )
 
