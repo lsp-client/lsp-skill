@@ -29,7 +29,7 @@ async def get_outline(
         ),
     ] = False,
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Get the hierarchical symbol outline (classes, functions, etc.) for a specific file.
     """

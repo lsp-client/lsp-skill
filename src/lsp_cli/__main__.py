@@ -45,7 +45,7 @@ app.add_typer(symbol.app)
 app.add_typer(search.app)
 
 
-def run():
+def run() -> None:
     # Suppress httpx INFO logs in CLI (unless debug mode)
     if not settings.debug:
         logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -56,7 +56,7 @@ def run():
         pass
     except Exception as e:
         if settings.debug:
-            raise e
+            raise
         print(f"Error: {get_msg(e)}", file=sys.stderr)
         sys.exit(1)
 

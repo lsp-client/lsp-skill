@@ -34,7 +34,7 @@ async def search(
     start_index: op.StartIndexOpt = 0,
     pagination_id: op.PaginationIdOpt = None,
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Search for symbols across the entire workspace by name query.
     """

@@ -20,13 +20,13 @@ from .models import (
 )
 
 __all__ = [
-    "Manager",
-    "ManagedClientInfo",
-    "ManagedClientInfoList",
     "CreateClientRequest",
     "CreateClientResponse",
     "DeleteClientRequest",
     "DeleteClientResponse",
+    "ManagedClientInfo",
+    "ManagedClientInfoList",
+    "Manager",
     "connect_manager",
     "get_manager",
     "manager_lifespan",

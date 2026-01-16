@@ -14,7 +14,7 @@ def main_callback(
         "-d",
         help="Enable verbose debug logging for troubleshooting.",
     ),
-):
+) -> None:
     if debug:
         settings.debug = True
 
@@ -24,4 +24,4 @@ def main_callback(
     ctx.ensure_object(dict)
     if ctx.invoked_subcommand is None:
         print(ctx.get_help())
-        raise typer.Exit()
+        raise typer.Exit

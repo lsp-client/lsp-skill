@@ -14,11 +14,10 @@ class ManagedClientInfo(BaseModel):
     @classmethod
     def format(cls, data: list[ManagedClientInfo] | ManagedClientInfo) -> str:
         infos = [data] if isinstance(data, ManagedClientInfo) else data
-        lines = []
-        for info in infos:
-            lines.append(
-                f"{info.language:<10} {info.project_path} ({info.remaining_time:.1f}s)"
-            )
+        lines = [
+            f"{info.language:<10} {info.project_path} ({info.remaining_time:.1f}s)"
+            for info in infos
+        ]
         return "\n".join(lines)
 
 

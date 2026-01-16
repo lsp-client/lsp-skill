@@ -14,7 +14,7 @@ app = typer.Typer()
 async def get_doc(
     locate: op.LocateOpt,
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Get documentation and type information for a symbol at a specific location.
     """

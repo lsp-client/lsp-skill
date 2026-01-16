@@ -23,7 +23,7 @@ async def rename_preview(
     new_name: Annotated[str, typer.Argument(help="The new name for the symbol.")],
     locate: op.LocateOpt,
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Preview the effects of renaming a symbol at a specific location.
     """
@@ -58,7 +58,7 @@ async def rename_execute(
     ] = None,
     workspace: op.WorkspaceOpt = None,
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Execute a rename operation using the ID from a previous preview.
     """

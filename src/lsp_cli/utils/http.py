@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import httpx
 from attrs import define, field
 from pydantic import BaseModel
@@ -91,7 +89,7 @@ class HttpClient:
     def __enter__(self) -> HttpClient:
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         self.close()
 
 
@@ -179,5 +177,5 @@ class AsyncHttpClient:
     async def __aenter__(self) -> AsyncHttpClient:
         return self
 
-    async def __aexit__(self, *args: Any) -> None:
+    async def __aexit__(self, *args: object) -> None:
         await self.close()

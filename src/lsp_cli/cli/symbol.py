@@ -14,7 +14,7 @@ app = typer.Typer()
 async def get_symbol(
     locate: op.LocateOpt,
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Get detailed symbol information at a specific location.
     """

@@ -27,7 +27,7 @@ async def get_definition(
     decl: bool = typer.Option(False, "--decl", help="Search for symbol declaration."),
     type_def: bool = typer.Option(False, "--type", help="Search for type definition."),
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Find the definition (default), declaration (--decl), or type definition (--type) of a symbol.
     """

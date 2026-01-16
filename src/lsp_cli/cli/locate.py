@@ -22,7 +22,7 @@ async def get_location(
         help="Verify if the target exists in the file and show its context.",
     ),
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Locate a position or range in the codebase using a string syntax.
 

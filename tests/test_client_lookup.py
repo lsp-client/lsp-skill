@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import pytest
+
 from lsp_cli.client import find_target
 
 

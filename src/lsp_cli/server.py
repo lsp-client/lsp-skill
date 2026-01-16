@@ -36,7 +36,7 @@ ProjectOpt = Annotated[
 
 
 @app.callback(invoke_without_command=True)
-def callback(ctx: typer.Context):
+def callback(ctx: typer.Context) -> None:
     """Manage LSP servers."""
     if ctx.invoked_subcommand is None:
         list_servers()
@@ -47,7 +47,7 @@ def get_manager_client() -> HttpClient:
 
 
 @app.command("list")
-def list_servers():
+def list_servers() -> None:
     """List all currently running and managed LSP servers."""
     with get_manager_client() as client:
         resp = client.get("/list", ManagedClientInfoList)
@@ -61,12 +61,15 @@ def list_servers():
 @app.command("start")
 def start_server(
     path: Path = typer.Argument(
-        Path.cwd(),
+        None,
         help="Path to a code file or project directory to start the LSP server for.",
     ),
     project: ProjectOpt = None,
-):
+) -> None:
     """Start a background LSP server for the project containing the specified path."""
+    if path is None:
+        path = Path.cwd()
+
     if not path.is_absolute():
         path = path.absolute()
 
@@ -85,12 +88,15 @@ def start_server(
 @app.command("stop")
 def stop_server(
     path: Path = typer.Argument(
-        Path.cwd(),
+        None,
         help="Path to a code file or project directory to stop the LSP server for.",
     ),
     project: ProjectOpt = None,
-):
+) -> None:
     """Stop the background LSP server for the project containing the specified path."""
+    if path is None:
+        path = Path.cwd()
+
     if not path.is_absolute():
         path = path.absolute()
 

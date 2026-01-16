@@ -39,7 +39,7 @@ async def get_reference(
     start_index: op.StartIndexOpt = 0,
     pagination_id: op.PaginationIdOpt = None,
     project: op.ProjectOpt = None,
-):
+) -> None:
     """
     Find references (default) or implementations (--impl) of a symbol.
     """

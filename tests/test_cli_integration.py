@@ -25,7 +25,7 @@ class TestCLIIntegration:
     def run_lsp_command(self, *args, timeout=30):
         """Run an lsp command and return the result."""
         result = subprocess.run(
-            ["uv", "run", "lsp"] + list(args),
+            ["uv", "run", "lsp", *list(args)],
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -70,7 +70,7 @@ class TestRapidCLICommands:
     def run_lsp_command(self, *args, timeout=30):
         """Run an lsp command and return the result."""
         result = subprocess.run(
-            ["uv", "run", "lsp"] + list(args),
+            ["uv", "run", "lsp", *list(args)],
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -215,7 +215,7 @@ class TestConnectionReliability:
     def run_lsp_command(self, *args, timeout=30):
         """Run an lsp command and return the result."""
         result = subprocess.run(
-            ["uv", "run", "lsp"] + list(args),
+            ["uv", "run", "lsp", *list(args)],
             capture_output=True,
             text=True,
             timeout=timeout,

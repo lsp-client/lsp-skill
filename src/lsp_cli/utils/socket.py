@@ -23,5 +23,5 @@ async def wait_socket(path: Path, timeout: float = 10.0) -> None:
         with attempt:
             try:
                 _ = await anyio.connect_unix(path)
-            except (OSError, RuntimeError):
-                raise OSError(f"Socket {path} not ready")
+            except (OSError, RuntimeError) as e:
+                raise OSError(f"Socket {path} not ready") from e

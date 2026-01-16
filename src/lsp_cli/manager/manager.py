@@ -84,7 +84,7 @@ class Manager:
             logger.info(f"[Manager] Removing client: {client.id}")
             self._clients.pop(client.id, None)
 
-    async def delete_client(self, path: Path, project_path: Path | None = None):
+    async def delete_client(self, path: Path, project_path: Path | None = None) -> None:
         if target := self._get_target(path, project_path):
             client_id = get_client_id(target)
             if client := self._clients.get(client_id):
@@ -104,7 +104,7 @@ class Manager:
         return [client.info for client in self._clients.values()]
 
     @asynccontextmanager
-    async def run(self):
+    async def run(self) -> AsyncGenerator[Manager]:
         logger.info("[Manager] Starting manager")
         try:
             async with asyncer.create_task_group() as tg:
