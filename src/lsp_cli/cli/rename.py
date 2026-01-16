@@ -27,7 +27,6 @@ async def rename_preview(
     """
     Preview the effects of renaming a symbol at a specific location.
     """
-
     locate_obj = create_locate(locate)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:

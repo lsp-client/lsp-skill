@@ -1,25 +1,23 @@
-import sys
+from typing import Annotated
 
 import typer
-from loguru import logger
 
+from lsp_cli.utils.debug import setup_debug
 from lsp_cli.settings import CLI_LOG_PATH, settings
 
 
 def main_callback(
     ctx: typer.Context,
-    debug: bool = typer.Option(
-        False,
-        "--debug",
-        "-d",
-        help="Enable verbose debug logging for troubleshooting.",
-    ),
+    debug: Annotated[
+        bool,
+        typer.Option(
+            "--debug",
+            "-d",
+            help="Enable verbose debug logging for troubleshooting.",
+        ),
+    ] = False,
 ) -> None:
-    if debug:
-        settings.debug = True
-
-    logger.remove()
-    logger.add(sys.stderr, level=settings.effective_log_level)
+    setup_debug(debug)
 
     CLI_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     logger.add(

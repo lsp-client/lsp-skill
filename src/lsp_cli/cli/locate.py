@@ -25,30 +25,6 @@ async def get_location(
 ) -> None:
     """
     Locate a position or range in the codebase using a string syntax.
-
-    Syntax: `<file_path>[:<scope>][@<find>]`
-
-    Scope formats:
-
-    - `<line>` - Single line number (e.g., `42`)
-
-    - `<start>,<end>` - Line range with comma (e.g., `10,20`)
-
-    - `<start>-<end>` - Line range with dash (e.g., `10-20`)
-
-    - `<symbol_path>` - Symbol path with dots (e.g., `MyClass.my_method`)
-
-    Examples:
-
-    - `foo.py@self.<|>`
-
-    - `foo.py:42@return <|>result`
-
-    - `foo.py:10,20@if <|>condition`
-
-    - `foo.py:MyClass.my_method@self.<|>`
-
-    - `foo.py:MyClass`
     """
     locate_obj = create_locate(locate)
 

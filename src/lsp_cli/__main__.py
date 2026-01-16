@@ -25,6 +25,8 @@ app = typer.Typer(
         "help_option_names": ["-h", "--help"],
         "max_content_width": 1000,
         "terminal_width": 1000,
+        "ignore_unknown_options": True,
+        "allow_extra_args": True,
     },
     add_completion=False,
     rich_markup_mode=None,
