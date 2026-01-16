@@ -13,6 +13,9 @@ APP_NAME = "lsp-cli"
 CONFIG_PATH = Path(user_config_dir(APP_NAME)) / "config.toml"
 RUNTIME_DIR = Path(user_runtime_dir(APP_NAME))
 LOG_DIR = Path(user_log_dir(APP_NAME))
+CLI_LOG_PATH = LOG_DIR / "cli.log"
+MANAGER_LOG_PATH = LOG_DIR / "manager.log"
+CLIENT_LOG_DIR = LOG_DIR / "clients"
 MANAGER_UDS_PATH = RUNTIME_DIR / "manager.sock"
 
 LogLevel = Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
