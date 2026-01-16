@@ -15,7 +15,7 @@ from litestar.exceptions import NotFoundException
 from loguru import logger
 
 from lsp_cli.client import ClientTarget, find_target, match_target
-from lsp_cli.settings import LOG_DIR, settings
+from lsp_cli.settings import LOG_DIR, MANAGER_LOG_PATH, settings
 
 from .client import ManagedClient, get_client_id
 from .models import (
@@ -35,7 +35,7 @@ class Manager:
 
     def __attrs_post_init__(self) -> None:
         LOG_DIR.mkdir(parents=True, exist_ok=True)
-        log_path = LOG_DIR / "manager.log"
+        log_path = MANAGER_LOG_PATH
         log_level = settings.effective_log_level
         self._logger_sink_id = logger.add(
             log_path,
@@ -128,7 +128,7 @@ async def manager_lifespan(app: Litestar) -> AsyncGenerator[None]:
 
 
 logger.add(
-    LOG_DIR / "manager.log",
+    MANAGER_LOG_PATH,
     rotation="1 day",
     retention="7 days",
     level="DEBUG",

@@ -15,7 +15,7 @@ from loguru import logger as global_logger
 
 from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import Capabilities, CapabilityController
-from lsp_cli.settings import LOG_DIR, RUNTIME_DIR, settings
+from lsp_cli.settings import CLIENT_LOG_DIR, RUNTIME_DIR, settings
 
 from .models import ManagedClientInfo
 
@@ -43,7 +43,7 @@ class ManagedClient:
     def __attrs_post_init__(self) -> None:
         self._deadline = anyio.current_time() + settings.idle_timeout
 
-        client_log_dir = LOG_DIR / "clients"
+        client_log_dir = CLIENT_LOG_DIR
         client_log_dir.mkdir(parents=True, exist_ok=True)
 
         log_path = client_log_dir / f"{self.id}.log"
