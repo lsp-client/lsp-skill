@@ -101,12 +101,15 @@ def stop_server(
         path = path.absolute()
 
     with get_manager_client() as client:
-        client.delete(
+        resp = client.delete(
             "/delete",
             DeleteClientResponse,
             json=DeleteClientRequest(path=path, project_path=project),
         )
-        print(f"Success: Stopped server for {path}")
+        if resp and resp.info:
+            print(f"Success: Stopped server for {path}")
+        else:
+            print(f"Warning: No server running for {path}")
 
 
 if __name__ == "__main__":
