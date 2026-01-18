@@ -46,20 +46,23 @@ async def managed_client(
 
 def create_locate(locate_str: str) -> Locate:
     locate = parse_locate_string(locate_str)
-    if isinstance(locate.scope, LineScope):
-        if isinstance(locate.scope.line, tuple):
-            start, end = locate.scope.line
+
+    match locate.scope:
+        case LineScope(line=(start, end)):
             if start <= 0 or end <= 0:
                 raise ValueError("Line numbers must be positive integers")
             if start > end:
                 raise ValueError(
                     f"Start line ({start}) cannot be greater than end line ({end})"
                 )
-        elif locate.scope.line <= 0:
+        case LineScope(line=int(line)) if line <= 0:
             raise ValueError("Line number must be a positive integer")
 
     if not locate.file_path.is_absolute():
         locate.file_path = locate.file_path.absolute()
+
+    if not locate.file_path.is_file():
+        raise FileNotFoundError(f"File not found: {locate.file_path}")
 
     return locate
 
