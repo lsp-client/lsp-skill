@@ -1,10 +1,9 @@
 from typing import Annotated
 
 import typer
-from loguru import logger
 
-from lsp_cli.settings import CLI_LOG_PATH
-from lsp_cli.utils.debug import setup_debug
+from lsp_cli.logging import setup_logging
+from lsp_cli.settings import CLI_LOG_PATH, settings
 
 
 def main_callback(
@@ -18,17 +17,10 @@ def main_callback(
         ),
     ] = False,
 ) -> None:
-    setup_debug(debug)
+    if debug:
+        settings.debug = True
 
-    CLI_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    logger.add(
-        CLI_LOG_PATH,
-        rotation="10 MB",
-        retention="1 day",
-        level="DEBUG",
-        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-        enqueue=True,
-    )
+    setup_logging(log_file=CLI_LOG_PATH)
 
     ctx.ensure_object(dict)
     if ctx.invoked_subcommand is None:

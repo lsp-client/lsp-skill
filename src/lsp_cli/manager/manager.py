@@ -17,6 +17,7 @@ from litestar.exceptions import NotFoundException
 from loguru import logger
 
 from lsp_cli.client import ClientTarget, find_target, match_target
+from lsp_cli.logging import setup_logging
 from lsp_cli.settings import LOG_DIR, MANAGER_LOG_PATH, MANAGER_UDS_PATH, settings
 from lsp_cli.utils.http import AsyncHttpClient
 from lsp_cli.utils.socket import is_socket_alive, wait_socket
@@ -35,22 +36,11 @@ from .models import (
 class Manager:
     _clients: dict[str, ManagedClient] = Factory(dict)
     _tg: asyncer.TaskGroup = field(init=False)
-    _logger_sink_id: int = field(init=False)
 
     def __attrs_post_init__(self) -> None:
-        LOG_DIR.mkdir(parents=True, exist_ok=True)
-        log_path = MANAGER_LOG_PATH
-        log_level = settings.effective_log_level
-        self._logger_sink_id = logger.add(
-            log_path,
-            rotation="10 MB",
-            retention="1 day",
-            level=log_level,
-            format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-            enqueue=True,
-        )
+        setup_logging(log_file=MANAGER_LOG_PATH)
         logger.info(
-            f"[Manager] Manager log initialized at {log_path} (level: {log_level})"
+            f"[Manager] Manager log initialized at {MANAGER_LOG_PATH} (level: {settings.effective_log_level})"
         )
 
     def _get_target(
@@ -118,9 +108,11 @@ class Manager:
             async with asyncer.create_task_group() as tg:
                 self._tg = tg
                 yield self
+        except Exception:
+            logger.exception("Manager crashed due to unhandled exception")
+            raise
         finally:
             logger.info("[Manager] Shutting down manager")
-            logger.remove(self._logger_sink_id)
 
 
 @asynccontextmanager
@@ -129,14 +121,6 @@ async def manager_lifespan(app: Litestar) -> AsyncGenerator[None]:
     async with Manager().run() as manager:
         app.state.manager = manager
         yield
-
-
-logger.add(
-    MANAGER_LOG_PATH,
-    rotation="1 day",
-    retention="7 days",
-    level="DEBUG",
-)
 
 
 def get_manager(state: State) -> Manager:

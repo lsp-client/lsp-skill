@@ -14,6 +14,7 @@ from litestar import Litestar, Request, Response
 from loguru import logger as global_logger
 
 from lsp_cli.client import ClientTarget
+from lsp_cli.logging import add_log_file
 from lsp_cli.manager.capability import Capabilities, CapabilityController
 from lsp_cli.settings import CLIENT_LOG_DIR, RUNTIME_DIR, settings
 
@@ -47,15 +48,7 @@ class ManagedClient:
         client_log_dir.mkdir(parents=True, exist_ok=True)
 
         log_path = client_log_dir / f"{self.id}.log"
-        log_level = settings.effective_log_level
-        self._logger_sink_id = global_logger.add(
-            log_path,
-            rotation="10 MB",
-            retention="1 day",
-            level=log_level,
-            format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}:{function}:{line}</cyan> - <level>{message}</level>",
-            enqueue=True,
-        )
+        self._logger_sink_id = add_log_file(log_path)
         self._logger = global_logger.bind(client_id=self.id)
         self._logger.info("Client log initialized at {}", log_path)
 

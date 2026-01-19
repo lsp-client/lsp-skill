@@ -1,8 +1,6 @@
-import logging
 import sys
 
 import typer
-from loguru import logger
 
 from lsp_cli.cli import (
     definition,
@@ -16,7 +14,7 @@ from lsp_cli.cli import (
 )
 from lsp_cli.cli.main import main_callback
 from lsp_cli.server import app as server_app
-from lsp_cli.settings import CLI_LOG_PATH, CLIENT_LOG_DIR, MANAGER_LOG_PATH, settings
+from lsp_cli.settings import CLI_LOG_PATH, settings
 
 app = typer.Typer(
     help="LSP CLI: A command-line tool for interacting with Language Server Protocol (LSP) features.",
@@ -48,22 +46,12 @@ app.add_typer(search.app)
 
 
 def run() -> None:
-    if not settings.debug:
-        logging.getLogger("httpx").setLevel(logging.WARNING)
-
     try:
         app()
-    except (typer.Exit, typer.Abort):
-        pass
-    except Exception as e:
+    except Exception:
         if settings.debug:
             raise
-        logger.opt(exception=e).debug("Unhandled exception")
-        print("\nFor more details, see the log files:", file=sys.stderr)
-        print(f"  CLI:     {CLI_LOG_PATH}", file=sys.stderr)
-        print(f"  Manager: {MANAGER_LOG_PATH}", file=sys.stderr)
-        print(f"  Clients: {CLIENT_LOG_DIR}", file=sys.stderr)
-        sys.exit(1)
+        print(f"For more details, check the log at: {CLI_LOG_PATH}", file=sys.stderr)
 
 
 if __name__ == "__main__":
