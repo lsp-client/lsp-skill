@@ -1,5 +1,3 @@
-from typing import Annotated
-
 import cyclopts
 from lsap.schema.locate import LocateRequest, LocateResponse
 
@@ -17,30 +15,26 @@ app = cyclopts.App(
 
 @app.default
 async def locate(
-    locate_str: Annotated[str, cyclopts.Parameter(help="The locate string to parse.")],
+    file_path: op.FilePathOpt,
+    scope: op.ScopeOpt = None,
+    find: op.FindOpt = None,
     opts: op.GlobalOpts = op.GlobalOpts(),
     project: op.ProjectOpt = None,
 ) -> None:
     """
-    Locate a position or range in the codebase using a string syntax.
-
-    Syntax: `<file_path>[:<scope>][@<find>]`
+    Locate a position or range in the codebase.
 
     Scope formats:
-    - `<line>` - Single line number (e.g., `42`)
-    - `<start>,<end>` - Line range with comma (e.g., `10,20`)
-    - `<start>-<end>` - Line range with dash (e.g., `10-20`)
-    - `<symbol_path>` - Symbol path with dots (e.g., `MyClass.my_method`)
+    - `<line>` - Single line number (e.g., `42`).
+    - `<start>,<end>` - Line range (e.g., `10,20`). Use 0 for end to mean till EOF (e.g., `10,0`).
+    - `<symbol_path>` - Symbol path (e.g., `MyClass.my_method`).
 
-    Examples:
-    - `foo.py@self.<|>`
-    - `foo.py:42@return <|>result`
-    - `foo.py:10,20@if <|>condition`
-    - `foo.py:MyClass.my_method@self.<|>`
-    - `foo.py:MyClass`
+    Find format:
+    - Pattern to search for within the file or scope.
+    - Supports markers like `<|>` to specify exact position.
     """
     main_callback(opts.debug)
-    locate_obj = create_locate(locate_str)
+    locate_obj = create_locate(file_path, scope, find)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:
         match await client.post(

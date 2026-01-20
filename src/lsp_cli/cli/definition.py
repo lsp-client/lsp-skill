@@ -17,7 +17,9 @@ app = cyclopts.App(
 
 @app.default
 async def definition(
-    locate_opt: op.LocateOpt,
+    file_path: op.FilePathOpt,
+    scope: op.ScopeOpt = None,
+    find: op.FindOpt = None,
     opts: op.GlobalOpts = op.GlobalOpts(),
     mode: Annotated[
         Literal["definition", "declaration", "type_definition"],
@@ -31,9 +33,18 @@ async def definition(
 ) -> None:
     """
     Find the definition (default), declaration (--mode declaration), or type definition (--mode type_definition) of a symbol.
+
+    Scope formats:
+    - `<line>` - Single line number (e.g., `42`).
+    - `<start>,<end>` - Line range (e.g., `10,20`). Use 0 for end to mean till EOF (e.g., `10,0`).
+    - `<symbol_path>` - Symbol path (e.g., `MyClass.my_method`).
+
+    Find format:
+    - Pattern to search for within the file or scope.
+    - Supports markers like `<|>` to specify exact position.
     """
     main_callback(opts.debug)
-    locate = create_locate(locate_opt)
+    locate = create_locate(file_path, scope, find)
 
     async with managed_client(locate.file_path, project_path=project) as client:
         match await client.post(

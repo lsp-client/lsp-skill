@@ -3,8 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
-from lsap.schema.locate import Locate
-from lsap.utils.locate import parse_locate_string
+from lsap.schema.locate import LineScope, Locate, SymbolScope
 
 from lsp_cli.manager.manager import connect_manager
 from lsp_cli.manager.models import CreateClientRequest, CreateClientResponse
@@ -36,13 +35,25 @@ async def managed_client(
         yield client
 
 
-def create_locate(locate_str: str) -> Locate:
-    locate = parse_locate_string(locate_str)
+def parse_scope(scope_str: str | None) -> LineScope | SymbolScope | None:
+    if not scope_str:
+        return None
 
-    if not locate.file_path.is_absolute():
-        locate.file_path = locate.file_path.resolve()
+    if "," in scope_str:
+        start, end = scope_str.split(",", 1)
+        start_val = int(start)
+        end_val = int(end)
+        actual_end = 0 if end_val == 0 else end_val + 1
+        return LineScope(start_line=start_val, end_line=actual_end)
+    if scope_str.isdigit():
+        return LineScope(start_line=int(scope_str), end_line=int(scope_str) + 1)
+    symbol_path = scope_str.split(".")
+    return SymbolScope(symbol_path=symbol_path)
 
-    if not locate.file_path.is_file():
-        raise FileNotFoundError(f"File not found: {locate.file_path}")
 
-    return locate
+def create_locate(
+    file_path: Path,
+    scope: str | None = None,
+    find: str | None = None,
+) -> Locate:
+    return Locate(file_path=file_path, scope=parse_scope(scope), find=find)

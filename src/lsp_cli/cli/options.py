@@ -17,11 +17,35 @@ class GlobalOpts:
     ] = False
 
 
-LocateOpt = Annotated[
-    str,
+def validate_file_path(type_: type, value: str) -> Path:
+    path = Path(value).resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"File not found or not a file: {path}")
+    return path
+
+
+FilePathOpt = Annotated[
+    Path,
     Parameter(
-        name=["--locate", "-L"],
-        help="Location string (see 'lsp locate --help' for syntax).",
+        name=["--file-path", "-f"],
+        help="Path to the file.",
+        converter=validate_file_path,
+    ),
+]
+
+ScopeOpt = Annotated[
+    str | None,
+    Parameter(
+        name=["--scope", "-s"],
+        help="Scope of the search.",
+    ),
+]
+
+FindOpt = Annotated[
+    str | None,
+    Parameter(
+        name=["--find"],
+        help="Pattern to find.",
     ),
 ]
 
