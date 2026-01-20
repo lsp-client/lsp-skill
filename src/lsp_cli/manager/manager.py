@@ -135,22 +135,22 @@ async def create_client_handler(
 ) -> CreateClientResponse:
     manager = get_manager(state)
     uds_path = await manager.create_client(data.path, project_path=data.project_path)
-    info = manager.inspect_client(data.path, project_path=data.project_path)
-    if not info:
-        raise RuntimeError("Failed to create client")
 
-    return CreateClientResponse(uds_path=uds_path, info=info)
+    if info := manager.inspect_client(data.path, project_path=data.project_path):
+        return CreateClientResponse(uds_path=uds_path, info=info)
+    raise RuntimeError("Failed to create client")
 
 
 @delete("/delete", status_code=200)
 async def delete_client_handler(
     data: DeleteClientRequest, state: State
-) -> DeleteClientResponse:
+) -> DeleteClientResponse | None:
     manager = get_manager(state)
-    info = manager.inspect_client(data.path, project_path=data.project_path)
-    await manager.delete_client(data.path, project_path=data.project_path)
 
-    return DeleteClientResponse(info=info)
+    if info := await manager.delete_client(data.path, project_path=data.project_path):
+        return DeleteClientResponse(info=info)
+
+    return None
 
 
 @get("/list")

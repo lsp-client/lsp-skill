@@ -1,6 +1,7 @@
 import typer
 from lsap.schema.symbol import SymbolRequest, SymbolResponse
 
+from lsp_cli.utils.model import Nullable
 from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
@@ -12,23 +13,18 @@ app = typer.Typer()
 @app.command("symbol")
 @cli_syncify
 async def get_symbol(
-    locate: op.LocateOpt,
+    locate_opt: op.LocateOpt,
     project: op.ProjectOpt = None,
 ) -> None:
-    """
-    Get detailed symbol information at a specific location.
-    """
+    locate = create_locate(locate_opt)
 
-    locate_obj = create_locate(locate)
-
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
-        resp_obj = await client.post(
+    async with managed_client(locate.file_path, project_path=project) as client:
+        match await client.post(
             "/capability/symbol",
-            SymbolResponse,
-            json=SymbolRequest(locate=locate_obj),
-        )
-
-    if resp_obj:
-        print(resp_obj.format())
-    else:
-        print("Warning: No symbol information found")
+            Nullable[SymbolResponse],
+            json=SymbolRequest(locate=locate),
+        ):
+            case Nullable(root=SymbolResponse() as resp):
+                print(resp.format())
+            case Nullable(root=None):
+                print("Warning: No symbol information found")

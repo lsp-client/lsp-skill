@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Self
+
 import httpx
-from attrs import define, field
-from pydantic import BaseModel
+from anyio import AsyncContextManagerMixin
+from attrs import define
+from pydantic import BaseModel, TypeAdapter
 
 
 @define
-class AsyncHttpClient:
-    client: httpx.AsyncClient = field(factory=httpx.AsyncClient)
+class AsyncHttpClient(AsyncContextManagerMixin):
+    client: httpx.AsyncClient
 
     async def request[T: BaseModel](
         self,
@@ -27,7 +32,7 @@ class AsyncHttpClient:
             json=json.model_dump(exclude_none=True, mode="json") if json else None,
         )
         resp.raise_for_status()
-        return resp_schema.model_validate(resp.json())
+        return TypeAdapter(resp_schema).validate_json(resp.json())
 
     async def get[T: BaseModel](
         self,
@@ -78,11 +83,7 @@ class AsyncHttpClient:
     ) -> T:
         return await self.request("DELETE", url, resp_schema, params=params, json=json)
 
-    async def close(self) -> None:
-        await self.client.aclose()
-
-    async def __aenter__(self) -> AsyncHttpClient:
-        return self
-
-    async def __aexit__(self, *args: object) -> None:
-        await self.close()
+    @asynccontextmanager
+    async def __asynccontextmanager__(self) -> AsyncGenerator[Self]:
+        async with self.client:
+            yield self

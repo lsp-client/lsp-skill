@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
-from lsap.schema.locate import LineScope, Locate
+from lsap.schema.locate import Locate
 from lsap.utils.locate import parse_locate_string
 
 from lsp_cli.manager.manager import connect_manager
@@ -38,17 +38,6 @@ async def managed_client(
 
 def create_locate(locate_str: str) -> Locate:
     locate = parse_locate_string(locate_str)
-
-    match locate.scope:
-        case LineScope(line=(start, end)):
-            if start <= 0 or end <= 0:
-                raise ValueError("Line numbers must be positive integers")
-            if start > end:
-                raise ValueError(
-                    f"Start line ({start}) cannot be greater than end line ({end})"
-                )
-        case LineScope(line=int(line)) if line <= 0:
-            raise ValueError("Line number must be a positive integer")
 
     if not locate.file_path.is_absolute():
         locate.file_path = locate.file_path.absolute()

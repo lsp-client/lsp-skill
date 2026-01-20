@@ -3,6 +3,7 @@ from typing import Annotated
 import typer
 from lsap.schema.reference import ReferenceRequest, ReferenceResponse
 
+from lsp_cli.utils.model import Nullable
 from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
@@ -29,18 +30,14 @@ async def get_reference(
     pagination_id: op.PaginationIdOpt = None,
     project: op.ProjectOpt = None,
 ) -> None:
-    """
-    Find references (default) or implementations (--impl) of a symbol.
-    """
-
     mode = "implementations" if impl else "references"
 
     locate_obj = create_locate(locate)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:
-        resp_obj = await client.post(
+        match await client.post(
             "/capability/reference",
-            ReferenceResponse,
+            Nullable[ReferenceResponse],
             json=ReferenceRequest(
                 locate=locate_obj,
                 mode=mode,
@@ -49,9 +46,8 @@ async def get_reference(
                 start_index=start_index,
                 pagination_id=pagination_id,
             ),
-        )
-
-    if resp_obj:
-        print(resp_obj.format())
-    else:
-        print(f"Warning: No {mode} found")
+        ):
+            case Nullable(root=ReferenceResponse() as resp):
+                print(resp.format())
+            case Nullable(root=None):
+                print(f"Warning: No {mode} found")

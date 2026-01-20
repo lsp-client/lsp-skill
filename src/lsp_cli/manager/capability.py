@@ -65,8 +65,8 @@ class CapabilityController(Controller):
     ) -> DefinitionResponse | None:
         return await state.capabilities.definition(data)
 
-    @post("/hover")
-    async def hover(self, data: DocRequest, state: State) -> DocResponse | None:
+    @post("/doc")
+    async def doc(self, data: DocRequest, state: State) -> DocResponse | None:
         return await state.capabilities.doc(data)
 
     @post("/locate")

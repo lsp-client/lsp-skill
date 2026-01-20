@@ -9,6 +9,7 @@ from lsap.schema.rename import (
     RenamePreviewResponse,
 )
 
+from lsp_cli.utils.model import Nullable
 from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
@@ -27,23 +28,18 @@ async def rename_preview(
     ],
     project: op.ProjectOpt = None,
 ) -> None:
-    """
-    Preview the effects of renaming a symbol at a specific location.
-    """
-
     locate_obj = create_locate(locate)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:
-        resp_obj = await client.post(
+        match await client.post(
             "/capability/rename/preview",
-            RenamePreviewResponse,
+            Nullable[RenamePreviewResponse],
             json=RenamePreviewRequest(locate=locate_obj, new_name=new_name),
-        )
-
-        if resp_obj:
-            print(resp_obj.format())
-        else:
-            print("Warning: No rename possibilities found at the location")
+        ):
+            case Nullable(root=RenamePreviewResponse() as resp):
+                print(resp.format())
+            case Nullable(root=None):
+                print("Warning: No rename possibilities found at the location")
 
 
 @app.command("execute")
@@ -62,9 +58,6 @@ async def rename_execute(
     workspace: op.WorkspaceOpt = None,
     project: op.ProjectOpt = None,
 ) -> None:
-    """
-    Execute a rename operation using the ID from a previous preview.
-    """
     if workspace is None:
         workspace = Path.cwd()
 
@@ -83,16 +76,15 @@ async def rename_execute(
                 normalized_exclude.append(str(cwd / p))
 
     async with managed_client(workspace, project_path=project) as client:
-        resp_obj = await client.post(
+        match await client.post(
             "/capability/rename/execute",
-            RenameExecuteResponse,
+            Nullable[RenameExecuteResponse],
             json=RenameExecuteRequest(
                 rename_id=rename_id,
                 exclude_files=normalized_exclude,
             ),
-        )
-
-        if resp_obj:
-            print(resp_obj.format())
-        else:
-            raise RuntimeError("Failed to execute rename")
+        ):
+            case Nullable(root=RenameExecuteResponse() as resp):
+                print(resp.format())
+            case _:
+                raise RuntimeError("Failed to execute rename")

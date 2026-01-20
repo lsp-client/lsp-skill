@@ -40,7 +40,7 @@ class DeleteClientRequest(BaseModel):
 
 
 class DeleteClientResponse(BaseModel):
-    info: ManagedClientInfo | None
+    info: ManagedClientInfo
 
 
 class LspRequest(BaseModel):

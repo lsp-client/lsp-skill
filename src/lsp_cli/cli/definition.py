@@ -1,6 +1,9 @@
+from typing import Annotated, Literal
+
 import typer
 from lsap.schema.definition import DefinitionRequest, DefinitionResponse
 
+from lsp_cli.utils.model import Nullable
 from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
@@ -12,36 +15,28 @@ app = typer.Typer()
 @app.command("definition")
 @cli_syncify
 async def get_definition(
-    locate: op.LocateOpt,
-    decl: bool = typer.Option(False, "--decl", help="Search for symbol declaration."),
-    type_def: bool = typer.Option(False, "--type", help="Search for type definition."),
+    locate_opt: op.LocateOpt,
+    mode: Annotated[
+        Literal["definition", "declaration", "type_definition"],
+        typer.Option(
+            "--mode",
+            "-m",
+            help="Mode to locate symbol: `definition` (default), `declaration`, or `type_definition`.",
+            case_sensitive=False,
+            show_default=True,
+        ),
+    ] = "definition",
     project: op.ProjectOpt = None,
 ) -> None:
-    """
-    Find the definition (default), declaration (--decl), or type definition (--type) of a symbol.
-    """
-    if decl and type_def:
-        raise ValueError("--decl and --type are mutually exclusive")
+    locate = create_locate(locate_opt)
 
-    mode = "definition"
-    if decl:
-        mode = "declaration"
-    elif type_def:
-        mode = "type_definition"
-
-    locate_obj = create_locate(locate)
-
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
-        resp_obj = await client.post(
+    async with managed_client(locate.file_path, project_path=project) as client:
+        match await client.post(
             "/capability/definition",
-            DefinitionResponse,
-            json=DefinitionRequest(
-                locate=locate_obj,
-                mode=mode,
-            ),
-        )
-
-    if resp_obj:
-        print(resp_obj.format())
-    else:
-        print(f"Warning: No {mode.replace('_', ' ')} found")
+            Nullable[DefinitionResponse],
+            json=DefinitionRequest(locate=locate, mode=mode),
+        ):
+            case Nullable(root=DefinitionResponse() as resp):
+                print(resp.format())
+            case Nullable(root=None):
+                print("No definition found.")

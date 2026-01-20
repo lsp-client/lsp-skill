@@ -47,9 +47,8 @@ def callback(ctx: typer.Context) -> None:
 async def list_servers() -> None:
     """List all currently running and managed LSP servers."""
     async with connect_manager() as client:
-        resp = await client.get("/list", ManagedClientInfoList)
-        if servers := resp.root if resp else []:
-            print(ManagedClientInfo.format(servers))
+        if resp := await client.get("/list", ManagedClientInfoList):
+            print(ManagedClientInfo.format(resp.root))
         else:
             print("No servers running.")
 
@@ -65,15 +64,13 @@ async def start_server(
     """Start a background LSP server for the project containing the specified path."""
 
     async with connect_manager() as client:
-        resp = await client.post(
+        if resp := await client.post(
             "/create",
             CreateClientResponse,
             json=CreateClientRequest(path=path.absolute(), project_path=project),
-        )
-        assert resp is not None
-        info = resp.info
-        print(f"Success: Started server for {path}")
-        print(ManagedClientInfo.format([info]))
+        ):
+            print(f"Success: Started server for {path}")
+            print(ManagedClientInfo.format([resp.info]))
 
 
 @app.command("stop")
@@ -87,12 +84,11 @@ async def stop_server(
     """Stop the background LSP server for the project containing the specified path."""
 
     async with connect_manager() as client:
-        resp = await client.delete(
+        if resp := await client.delete(
             "/delete",
             DeleteClientResponse,
             json=DeleteClientRequest(path=path.absolute(), project_path=project),
-        )
-        if resp.info:
+        ):
             print(f"Success: Stopped server for {resp.info.project_path}")
         else:
             print(f"Warning: No server running for {project}")
