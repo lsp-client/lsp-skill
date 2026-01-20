@@ -28,7 +28,6 @@ class Settings(BaseSettings):
 
     # UX improvements
     default_max_items: int | None = 20
-    default_context_lines: int = 2
     ignore_paths: list[str] = [
         ".git",
         "node_modules",

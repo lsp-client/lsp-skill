@@ -20,13 +20,17 @@ app = typer.Typer(name="rename", help="Rename a symbol at a specific location.")
 @app.command("preview")
 @cli_syncify
 async def rename_preview(
-    new_name: Annotated[str, typer.Argument(help="The new name for the symbol.")],
     locate: op.LocateOpt,
+    new_name: Annotated[
+        str,
+        typer.Option("-n", "--new_name", help="The new name for the symbol."),
+    ],
     project: op.ProjectOpt = None,
 ) -> None:
     """
     Preview the effects of renaming a symbol at a specific location.
     """
+
     locate_obj = create_locate(locate)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:

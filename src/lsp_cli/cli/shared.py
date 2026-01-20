@@ -1,4 +1,3 @@
-import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -11,10 +10,6 @@ from lsp_cli.manager.manager import connect_manager
 from lsp_cli.manager.models import CreateClientRequest, CreateClientResponse
 from lsp_cli.utils.http import AsyncHttpClient
 from lsp_cli.utils.socket import wait_socket
-
-
-def clean_error_msg(msg: str) -> str:
-    return re.sub(r"\[Errno \d+\] ", "", msg)
 
 
 @asynccontextmanager
