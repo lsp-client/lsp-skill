@@ -18,6 +18,7 @@ from lsp_cli.settings import CLI_LOG_PATH, CLIENT_LOG_DIR, MANAGER_LOG_PATH, set
 
 app = cyclopts.App(
     help="LSP CLI: A command-line tool for interacting with Language Server Protocol (LSP) features.",
+    help_formatter="plain",
 )
 
 # Add sub-apps
