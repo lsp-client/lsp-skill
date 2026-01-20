@@ -114,7 +114,6 @@ class ManagedClient:
         app = Litestar(
             route_handlers=[CapabilityController],
             lifespan=[lifespan],
-            debug=settings.debug,
             exception_handlers={Exception: exception_handler},
         )
 

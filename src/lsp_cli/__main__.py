@@ -1,5 +1,6 @@
 import sys
 from textwrap import dedent
+from typing import Annotated
 
 import cyclopts
 
@@ -14,7 +15,9 @@ from lsp_cli.cli import (
     search,
     symbol,
 )
-from lsp_cli.settings import CLI_LOG_PATH, CLIENT_LOG_DIR, MANAGER_LOG_PATH, settings
+from lsp_cli.settings import CLI_LOG_PATH, CLIENT_LOG_DIR, MANAGER_LOG_PATH
+from lsp_cli.state import State
+from lsp_cli.state import state as global_state
 
 app = cyclopts.App(
     help="LSP CLI: A command-line tool for interacting with Language Server Protocol (LSP) features.",
@@ -33,12 +36,17 @@ app.command(symbol.app)
 app.command(search.app)
 
 
+@app.default
+def main(
+    state: Annotated[State, cyclopts.Parameter(name="*")] = State(),
+) -> None:
+    global_state.debug = state.debug
+
+
 def run() -> None:
     try:
         app()
     except Exception as e:
-        if settings.debug:
-            raise
         print(
             dedent(
                 f"""

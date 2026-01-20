@@ -22,31 +22,15 @@ LogLevel = Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
 class Settings(BaseSettings):
-    debug: bool = False
     idle_timeout: int = 600
     log_level: LogLevel = "INFO"
 
     # UX improvements
     default_max_items: int | None = 20
-    ignore_paths: list[str] = [
-        ".git",
-        "node_modules",
-        "venv",
-        ".venv",
-        "__pycache__",
-        "dist",
-        "build",
-    ]
-
     model_config = SettingsConfigDict(
         env_prefix="LSP_",
         toml_file=CONFIG_PATH,
     )
-
-    @property
-    def effective_log_level(self) -> LogLevel:
-        """Get effective log level: TRACE if debug=True, otherwise use log_level"""
-        return "TRACE" if self.debug else self.log_level
 
     @classmethod
     def settings_customise_sources(

@@ -40,7 +40,7 @@ class Manager:
     def __attrs_post_init__(self) -> None:
         setup_logging(log_file=MANAGER_LOG_PATH)
         logger.info(
-            f"[Manager] Manager log initialized at {MANAGER_LOG_PATH} (level: {settings.effective_log_level})"
+            f"[Manager] Manager log initialized at {MANAGER_LOG_PATH} (level: {settings.log_level})"
         )
 
     def _get_target(
@@ -166,7 +166,6 @@ app: Final = Litestar(
         list_clients_handler,
     ],
     lifespan=[manager_lifespan],
-    debug=settings.debug,
 )
 
 
