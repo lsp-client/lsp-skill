@@ -7,7 +7,7 @@ from lsp_cli.utils.model import Nullable
 
 from . import options as op
 from .main import main_callback
-from .shared import create_locate, managed_client
+from .utils import connect_server, create_locate
 
 app = cyclopts.App(
     name="definition",
@@ -33,20 +33,12 @@ async def definition(
 ) -> None:
     """
     Find the definition (default), declaration (--mode declaration), or type definition (--mode type_definition) of a symbol.
-
-    Scope formats:
-    - `<line>` - Single line number (e.g., `42`).
-    - `<start>,<end>` - Line range (e.g., `10,20`). Use 0 for end to mean till EOF (e.g., `10,0`).
-    - `<symbol_path>` - Symbol path (e.g., `MyClass.my_method`).
-
-    Find format:
-    - Pattern to search for within the file or scope.
-    - Supports markers like `<|>` to specify exact position.
     """
+
     main_callback(opts.debug)
     locate = create_locate(file_path, scope, find)
 
-    async with managed_client(locate.file_path, project_path=project) as client:
+    async with connect_server(locate.file_path, project_path=project) as client:
         match await client.post(
             "/capability/definition",
             Nullable[DefinitionResponse],

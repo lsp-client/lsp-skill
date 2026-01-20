@@ -10,7 +10,7 @@ from lsp_cli.utils.model import Nullable
 
 from . import options as op
 from .main import main_callback
-from .shared import managed_client
+from .utils import connect_server
 
 app = cyclopts.App(
     name="search",
@@ -43,7 +43,7 @@ async def search(
     Search for symbols across the entire workspace by name query.
     """
     main_callback(opts.debug)
-    async with managed_client(workspace or Path.cwd()) as client:
+    async with connect_server(workspace or Path.cwd()) as client:
         effective_max_items = (
             max_items if max_items is not None else settings.default_max_items
         )

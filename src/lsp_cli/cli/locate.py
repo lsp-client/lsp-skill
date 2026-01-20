@@ -5,7 +5,7 @@ from lsp_cli.utils.model import Nullable
 
 from . import options as op
 from .main import main_callback
-from .shared import create_locate, managed_client
+from .utils import connect_server, create_locate
 
 app = cyclopts.App(
     name="locate",
@@ -23,20 +23,11 @@ async def locate(
 ) -> None:
     """
     Locate a position or range in the codebase.
-
-    Scope formats:
-    - `<line>` - Single line number (e.g., `42`).
-    - `<start>,<end>` - Line range (e.g., `10,20`). Use 0 for end to mean till EOF (e.g., `10,0`).
-    - `<symbol_path>` - Symbol path (e.g., `MyClass.my_method`).
-
-    Find format:
-    - Pattern to search for within the file or scope.
-    - Supports markers like `<|>` to specify exact position.
     """
     main_callback(opts.debug)
     locate_obj = create_locate(file_path, scope, find)
 
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
+    async with connect_server(locate_obj.file_path, project_path=project) as client:
         match await client.post(
             "/capability/locate",
             Nullable[LocateResponse],

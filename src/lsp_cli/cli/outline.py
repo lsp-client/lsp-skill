@@ -9,7 +9,7 @@ from lsp_cli.utils.model import Nullable
 
 from . import options as op
 from .main import main_callback
-from .shared import managed_client
+from .utils import connect_server
 
 app = cyclopts.App(
     name="outline",
@@ -36,8 +36,10 @@ async def outline(
     """
     Get the hierarchical symbol outline (classes, functions, etc.) for a specific file.
     """
+
     main_callback(opts.debug)
-    async with managed_client(file_path, project_path=project) as client:
+
+    async with connect_server(file_path, project_path=project) as client:
         match await client.post(
             "/capability/outline",
             Nullable[OutlineResponse],

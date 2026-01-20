@@ -13,7 +13,7 @@ from lsp_cli.utils.model import Nullable
 
 from . import options as op
 from .main import main_callback
-from .shared import create_locate, managed_client
+from .utils import connect_server, create_locate
 
 app = cyclopts.App(name="rename", help="Rename a symbol at a specific location.")
 
@@ -34,20 +34,11 @@ async def preview(
 ) -> None:
     """
     Preview the effects of renaming a symbol.
-
-    Scope formats:
-    - `<line>` - Single line number (e.g., `42`).
-    - `<start>,<end>` - Line range (e.g., `10,20`). Use 0 for end to mean till EOF (e.g., `10,0`).
-    - `<symbol_path>` - Symbol path (e.g., `MyClass.my_method`).
-
-    Find format:
-    - Pattern to search for within the file or scope.
-    - Supports markers like `<|>` to specify exact position.
     """
     main_callback(opts.debug)
     locate_obj = create_locate(file_path, scope, find)
 
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
+    async with connect_server(locate_obj.file_path, project_path=project) as client:
         match await client.post(
             "/capability/rename/preview",
             Nullable[RenamePreviewResponse],
@@ -96,7 +87,7 @@ async def execute(
             else:
                 normalized_exclude.append(str(cwd / p))
 
-    async with managed_client(workspace, project_path=project) as client:
+    async with connect_server(workspace, project_path=project) as client:
         match await client.post(
             "/capability/rename/execute",
             Nullable[RenameExecuteResponse],
