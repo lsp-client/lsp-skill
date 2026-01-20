@@ -1,8 +1,10 @@
 from pathlib import Path
 from typing import Annotated
 
-import typer
+import cyclopts
 
+from lsp_cli.cli import options as op
+from lsp_cli.cli.main import main_callback
 from lsp_cli.manager.manager import connect_manager
 from lsp_cli.manager.models import (
     CreateClientRequest,
@@ -13,40 +15,24 @@ from lsp_cli.manager.models import (
     ManagedClientInfoList,
 )
 from lsp_cli.utils.model import Nullable
-from lsp_cli.utils.sync import cli_syncify
 
-app = typer.Typer(
+app = cyclopts.App(
     name="server",
     help="Manage background LSP server processes.",
-    add_completion=False,
-    context_settings={
-        "help_option_names": ["-h", "--help"],
-        "max_content_width": 1000,
-        "terminal_width": 1000,
-    },
 )
 
 
-ProjectOpt = Annotated[
-    Path | None,
-    typer.Option(
-        "--project",
-        help="Path to the project. If specified, start a server in this directory.",
-    ),
-]
-
-
-@app.callback(invoke_without_command=True)
-def callback(ctx: typer.Context) -> None:
+@app.default
+async def default(opts: op.GlobalOpts = op.GlobalOpts()) -> None:
     """Manage LSP servers."""
-    if ctx.invoked_subcommand is None:
-        list_servers()
+    main_callback(opts.debug)
+    await list_servers(opts)
 
 
-@app.command("list")
-@cli_syncify
-async def list_servers() -> None:
+@app.command(name="list")
+async def list_servers(opts: op.GlobalOpts = op.GlobalOpts()) -> None:
     """List all currently running and managed LSP servers."""
+    main_callback(opts.debug)
     async with connect_manager() as client:
         if resp := await client.get("/list", ManagedClientInfoList):
             print(ManagedClientInfo.format(resp.root))
@@ -54,35 +40,41 @@ async def list_servers() -> None:
             print("No servers running.")
 
 
-@app.command("start")
-@cli_syncify
+@app.command(name="start")
 async def start_server(
-    path: Path = typer.Argument(
-        help="Path to a code file or project directory to start the LSP server for.",
-    ),
-    project: ProjectOpt = None,
+    path: Annotated[
+        Path,
+        cyclopts.Parameter(
+            help="Path to a code file or project directory to start the LSP server for."
+        ),
+    ],
+    opts: op.GlobalOpts = op.GlobalOpts(),
+    project: op.ProjectOpt = None,
 ) -> None:
     """Start a background LSP server for the project containing the specified path."""
-
+    main_callback(opts.debug)
     async with connect_manager() as client:
         if resp := await client.post(
             "/create",
             CreateClientResponse,
             json=CreateClientRequest(path=path.resolve(), project_path=project),
         ):
-            print(f"Success: Started server for {path}")
+            print(f"Success: Started server for {path.resolve()}")
             print(ManagedClientInfo.format([resp.info]))
 
 
-@app.command("stop")
-@cli_syncify
+@app.command(name="stop")
 async def stop_server(
-    path: Path = typer.Argument(
-        help="Path to a code file or project directory to stop the LSP server for.",
-    ),
+    path: Annotated[
+        Path,
+        cyclopts.Parameter(
+            help="Path to a code file or project directory to stop the LSP server for."
+        ),
+    ],
+    opts: op.GlobalOpts = op.GlobalOpts(),
 ) -> None:
     """Stop the background LSP server for the project containing the specified path."""
-
+    main_callback(opts.debug)
     path = path.resolve()
 
     async with connect_manager() as client:

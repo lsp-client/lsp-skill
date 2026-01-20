@@ -1,28 +1,29 @@
 from typing import Annotated, Literal
 
-import typer
+import cyclopts
 from lsap.schema.definition import DefinitionRequest, DefinitionResponse
 
 from lsp_cli.utils.model import Nullable
-from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
+from .main import main_callback
 from .shared import create_locate, managed_client
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="definition",
+    help="Find the definition, declaration, or type definition of a symbol.",
+)
 
 
-@app.command("definition")
-@cli_syncify
-async def get_definition(
+@app.default
+async def definition(
     locate_opt: op.LocateOpt,
+    opts: op.GlobalOpts = op.GlobalOpts(),
     mode: Annotated[
         Literal["definition", "declaration", "type_definition"],
-        typer.Option(
-            "--mode",
-            "-m",
+        cyclopts.Parameter(
+            name=["--mode", "-m"],
             help="Mode to locate symbol: `definition` (default), `declaration`, or `type_definition`.",
-            case_sensitive=False,
             show_default=True,
         ),
     ] = "definition",
@@ -31,6 +32,7 @@ async def get_definition(
     """
     Find the definition (default), declaration (--mode declaration), or type definition (--mode type_definition) of a symbol.
     """
+    main_callback(opts.debug)
     locate = create_locate(locate_opt)
 
     async with managed_client(locate.file_path, project_path=project) as client:

@@ -1,24 +1,28 @@
-import typer
+import cyclopts
 from lsap.schema.symbol import SymbolRequest, SymbolResponse
 
 from lsp_cli.utils.model import Nullable
-from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
+from .main import main_callback
 from .shared import create_locate, managed_client
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="symbol",
+    help="Get detailed symbol information at a specific location.",
+)
 
 
-@app.command("symbol")
-@cli_syncify
-async def get_symbol(
+@app.default
+async def symbol(
     locate_opt: op.LocateOpt,
+    opts: op.GlobalOpts = op.GlobalOpts(),
     project: op.ProjectOpt = None,
 ) -> None:
     """
     Get detailed symbol information at a specific location.
     """
+    main_callback(opts.debug)
     locate = create_locate(locate_opt)
 
     async with managed_client(locate.file_path, project_path=project) as client:

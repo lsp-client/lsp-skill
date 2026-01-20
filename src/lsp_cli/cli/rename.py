@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.rename import (
     RenameExecuteRequest,
     RenameExecuteResponse,
@@ -10,27 +10,30 @@ from lsap.schema.rename import (
 )
 
 from lsp_cli.utils.model import Nullable
-from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
+from .main import main_callback
 from .shared import create_locate, managed_client
 
-app = typer.Typer(name="rename", help="Rename a symbol at a specific location.")
+app = cyclopts.App(name="rename", help="Rename a symbol at a specific location.")
 
 
-@app.command("preview")
-@cli_syncify
-async def rename_preview(
+@app.command
+async def preview(
     locate: op.LocateOpt,
     new_name: Annotated[
         str,
-        typer.Option("-n", "--new_name", help="The new name for the symbol."),
+        cyclopts.Parameter(
+            name=["-n", "--new_name"], help="The new name for the symbol."
+        ),
     ],
+    opts: op.GlobalOpts = op.GlobalOpts(),
     project: op.ProjectOpt = None,
 ) -> None:
     """
     Preview the effects of renaming a symbol at a specific location.
     """
+    main_callback(opts.debug)
     locate_obj = create_locate(locate)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:
@@ -45,16 +48,16 @@ async def rename_preview(
                 print("Warning: No rename possibilities found at the location")
 
 
-@app.command("execute")
-@cli_syncify
-async def rename_execute(
+@app.command
+async def execute(
     rename_id: Annotated[
-        str, typer.Argument(help="Rename ID from a previous preview.")
+        str, cyclopts.Parameter(help="Rename ID from a previous preview.")
     ],
+    opts: op.GlobalOpts = op.GlobalOpts(),
     exclude: Annotated[
         list[str] | None,
-        typer.Option(
-            "--exclude",
+        cyclopts.Parameter(
+            name="--exclude",
             help="File paths or glob patterns to exclude from the rename operation. Can be specified multiple times.",
         ),
     ] = None,
@@ -64,6 +67,7 @@ async def rename_execute(
     """
     Execute a rename operation using the ID from a previous preview.
     """
+    main_callback(opts.debug)
     if workspace is None:
         workspace = Path.cwd()
 

@@ -1,33 +1,37 @@
 from pathlib import Path
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.models import SymbolKind
 from lsap.schema.search import SearchRequest, SearchResponse
 
 from lsp_cli.settings import settings
 from lsp_cli.utils.model import Nullable
-from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
+from .main import main_callback
 from .shared import managed_client
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="search",
+    help="Search for symbols across the entire workspace.",
+)
 
 
-@app.command("search")
-@cli_syncify
+@app.default
 async def search(
     query: Annotated[
         str,
-        typer.Argument(help="The name or partial name of the symbol to search for."),
+        cyclopts.Parameter(
+            help="The name or partial name of the symbol to search for."
+        ),
     ],
+    opts: op.GlobalOpts = op.GlobalOpts(),
     workspace: op.WorkspaceOpt = None,
     kinds: Annotated[
         list[str] | None,
-        typer.Option(
-            "--kind",
-            "-k",
+        cyclopts.Parameter(
+            name=["--kind", "-k"],
             help="Filter by symbol kind (e.g., 'class', 'function'). Can be specified multiple times.",
         ),
     ] = None,
@@ -38,6 +42,7 @@ async def search(
     """
     Search for symbols across the entire workspace by name query.
     """
+    main_callback(opts.debug)
     async with managed_client(workspace or Path.cwd()) as client:
         effective_max_items = (
             max_items if max_items is not None else settings.default_max_items

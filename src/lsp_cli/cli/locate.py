@@ -1,21 +1,24 @@
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.locate import LocateRequest, LocateResponse
 
 from lsp_cli.utils.model import Nullable
-from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
+from .main import main_callback
 from .shared import create_locate, managed_client
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="locate",
+    help="Locate a position or range in the codebase using a string syntax.",
+)
 
 
-@app.command("locate")
-@cli_syncify
-async def get_location(
-    locate: Annotated[str, typer.Argument(help="The locate string to parse.")],
+@app.default
+async def locate(
+    locate_str: Annotated[str, cyclopts.Parameter(help="The locate string to parse.")],
+    opts: op.GlobalOpts = op.GlobalOpts(),
     project: op.ProjectOpt = None,
 ) -> None:
     """
@@ -36,7 +39,8 @@ async def get_location(
     - `foo.py:MyClass.my_method@self.<|>`
     - `foo.py:MyClass`
     """
-    locate_obj = create_locate(locate)
+    main_callback(opts.debug)
+    locate_obj = create_locate(locate_str)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:
         match await client.post(

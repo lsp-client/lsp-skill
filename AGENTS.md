@@ -22,5 +22,5 @@
 - Python: 3.13+ required
 - `attrs` for class definitions
 - `anyio` and `asyncer` for async programming
-- `typer` for cli, `rich` for printing
+- `cyclopts` for cli, `rich` for printing
 - Output: Use plain text without colors or special formatting for all CLI messages

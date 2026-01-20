@@ -1,31 +1,33 @@
 from pathlib import Path
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.models import SymbolKind
 from lsap.schema.outline import OutlineRequest, OutlineResponse
 
 from lsp_cli.utils.model import Nullable
-from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
+from .main import main_callback
 from .shared import managed_client
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="outline",
+    help="Get the hierarchical symbol outline for a specific file.",
+)
 
 
-@app.command("outline")
-@cli_syncify
-async def get_outline(
+@app.default
+async def outline(
     file_path: Annotated[
         Path,
-        typer.Argument(help="Path to the file to get the symbol outline for."),
+        cyclopts.Parameter(help="Path to the file to get the symbol outline for."),
     ],
+    opts: op.GlobalOpts = op.GlobalOpts(),
     all_symbols: Annotated[
         bool,
-        typer.Option(
-            "--all",
-            "-a",
+        cyclopts.Parameter(
+            name=["--all", "-a"],
             help="Show all symbols including local variables and parameters.",
         ),
     ] = False,
@@ -34,6 +36,7 @@ async def get_outline(
     """
     Get the hierarchical symbol outline (classes, functions, etc.) for a specific file.
     """
+    main_callback(opts.debug)
     async with managed_client(file_path, project_path=project) as client:
         match await client.post(
             "/capability/outline",

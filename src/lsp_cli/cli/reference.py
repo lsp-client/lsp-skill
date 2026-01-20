@@ -1,27 +1,31 @@
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.reference import ReferenceRequest, ReferenceResponse
 
 from lsp_cli.utils.model import Nullable
-from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
+from .main import main_callback
 from .shared import create_locate, managed_client
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="reference",
+    help="Find references or implementations of a symbol.",
+)
 
 
-@app.command("reference")
-@cli_syncify
-async def get_reference(
+@app.default
+async def reference(
     locate: op.LocateOpt,
-    impl: bool = typer.Option(False, "--impl", help="Find concrete implementations."),
+    opts: op.GlobalOpts = op.GlobalOpts(),
+    impl: Annotated[
+        bool, cyclopts.Parameter(name="--impl", help="Find concrete implementations.")
+    ] = False,
     context_lines: Annotated[
         int,
-        typer.Option(
-            "--context-lines",
-            "-C",
+        cyclopts.Parameter(
+            name=["--context-lines", "-C"],
             help="Number of lines of context to show around each match.",
         ),
     ] = 2,
@@ -33,6 +37,7 @@ async def get_reference(
     """
     Find references (default) or implementations (--impl) of a symbol.
     """
+    main_callback(opts.debug)
     mode = "implementations" if impl else "references"
 
     locate_obj = create_locate(locate)
