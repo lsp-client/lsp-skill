@@ -28,6 +28,9 @@ async def get_definition(
     ] = "definition",
     project: op.ProjectOpt = None,
 ) -> None:
+    """
+    Find the definition (default), declaration (--mode declaration), or type definition (--mode type_definition) of a symbol.
+    """
     locate = create_locate(locate_opt)
 
     async with managed_client(locate.file_path, project_path=project) as client:

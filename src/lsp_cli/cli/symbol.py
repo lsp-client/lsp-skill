@@ -16,6 +16,9 @@ async def get_symbol(
     locate_opt: op.LocateOpt,
     project: op.ProjectOpt = None,
 ) -> None:
+    """
+    Get detailed symbol information at a specific location.
+    """
     locate = create_locate(locate_opt)
 
     async with managed_client(locate.file_path, project_path=project) as client:

@@ -23,7 +23,7 @@ async def managed_client(
         resp = await client.post(
             "/create",
             CreateClientResponse,
-            json=CreateClientRequest(path=path.absolute(), project_path=project_path),
+            json=CreateClientRequest(path=path.resolve(), project_path=project_path),
         )
 
     uds_path = resp.uds_path
@@ -40,7 +40,7 @@ def create_locate(locate_str: str) -> Locate:
     locate = parse_locate_string(locate_str)
 
     if not locate.file_path.is_absolute():
-        locate.file_path = locate.file_path.absolute()
+        locate.file_path = locate.file_path.resolve()
 
     if not locate.file_path.is_file():
         raise FileNotFoundError(f"File not found: {locate.file_path}")

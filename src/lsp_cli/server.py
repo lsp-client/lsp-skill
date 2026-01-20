@@ -12,6 +12,7 @@ from lsp_cli.manager.models import (
     ManagedClientInfo,
     ManagedClientInfoList,
 )
+from lsp_cli.utils.model import Nullable
 from lsp_cli.utils.sync import cli_syncify
 
 app = typer.Typer(
@@ -67,7 +68,7 @@ async def start_server(
         if resp := await client.post(
             "/create",
             CreateClientResponse,
-            json=CreateClientRequest(path=path.absolute(), project_path=project),
+            json=CreateClientRequest(path=path.resolve(), project_path=project),
         ):
             print(f"Success: Started server for {path}")
             print(ManagedClientInfo.format([resp.info]))
@@ -79,19 +80,21 @@ async def stop_server(
     path: Path = typer.Argument(
         help="Path to a code file or project directory to stop the LSP server for.",
     ),
-    project: ProjectOpt = None,
 ) -> None:
     """Stop the background LSP server for the project containing the specified path."""
 
+    path = path.resolve()
+
     async with connect_manager() as client:
-        if resp := await client.delete(
+        match await client.delete(
             "/delete",
-            DeleteClientResponse,
-            json=DeleteClientRequest(path=path.absolute(), project_path=project),
+            Nullable[DeleteClientResponse],
+            json=DeleteClientRequest(path=path),
         ):
-            print(f"Success: Stopped server for {resp.info.project_path}")
-        else:
-            print(f"Warning: No server running for {project}")
+            case Nullable(root=DeleteClientResponse(info=resp_info)):
+                print(f"Success: Stopped server for {resp_info.project_path}")
+            case Nullable(root=None):
+                print(f"Warning: No server running for {path}")
 
 
 if __name__ == "__main__":

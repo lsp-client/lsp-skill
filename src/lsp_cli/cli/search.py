@@ -35,6 +35,9 @@ async def search(
     start_index: op.StartIndexOpt = 0,
     pagination_id: op.PaginationIdOpt = None,
 ) -> None:
+    """
+    Search for symbols across the entire workspace by name query.
+    """
     async with managed_client(workspace or Path.cwd()) as client:
         effective_max_items = (
             max_items if max_items is not None else settings.default_max_items

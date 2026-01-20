@@ -31,11 +31,14 @@ async def get_outline(
     ] = False,
     project: op.ProjectOpt = None,
 ) -> None:
+    """
+    Get the hierarchical symbol outline (classes, functions, etc.) for a specific file.
+    """
     async with managed_client(file_path, project_path=project) as client:
         match await client.post(
             "/capability/outline",
             Nullable[OutlineResponse],
-            json=OutlineRequest(file_path=file_path.absolute()),
+            json=OutlineRequest(file_path=file_path.resolve()),
         ):
             case Nullable(root=OutlineResponse() as resp) if resp.items:
                 if not all_symbols:

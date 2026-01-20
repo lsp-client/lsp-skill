@@ -28,6 +28,9 @@ async def rename_preview(
     ],
     project: op.ProjectOpt = None,
 ) -> None:
+    """
+    Preview the effects of renaming a symbol at a specific location.
+    """
     locate_obj = create_locate(locate)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:
@@ -58,11 +61,14 @@ async def rename_execute(
     workspace: op.WorkspaceOpt = None,
     project: op.ProjectOpt = None,
 ) -> None:
+    """
+    Execute a rename operation using the ID from a previous preview.
+    """
     if workspace is None:
         workspace = Path.cwd()
 
     if not workspace.is_absolute():
-        workspace = workspace.absolute()
+        workspace = workspace.resolve()
 
     # Normalize exclude paths and globs to absolute paths/globs
     normalized_exclude = []

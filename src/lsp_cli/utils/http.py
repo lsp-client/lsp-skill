@@ -32,7 +32,7 @@ class AsyncHttpClient(AsyncContextManagerMixin):
             json=json.model_dump(exclude_none=True, mode="json") if json else None,
         )
         resp.raise_for_status()
-        return TypeAdapter(resp_schema).validate_json(resp.json())
+        return TypeAdapter(resp_schema).validate_python(resp.json())
 
     async def get[T: BaseModel](
         self,

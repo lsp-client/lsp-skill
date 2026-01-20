@@ -16,6 +16,9 @@ async def get_doc(
     locate: op.LocateOpt,
     project: op.ProjectOpt = None,
 ) -> None:
+    """
+    Get documentation and type information for a symbol at a specific location.
+    """
     locate_obj = create_locate(locate)
 
     async with managed_client(locate_obj.file_path, project_path=project) as client:

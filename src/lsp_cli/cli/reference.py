@@ -30,6 +30,9 @@ async def get_reference(
     pagination_id: op.PaginationIdOpt = None,
     project: op.ProjectOpt = None,
 ) -> None:
+    """
+    Find references (default) or implementations (--impl) of a symbol.
+    """
     mode = "implementations" if impl else "references"
 
     locate_obj = create_locate(locate)
