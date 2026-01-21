@@ -30,7 +30,8 @@ async def default() -> None:
 async def list_servers() -> None:
     """List all currently running and managed LSP servers."""
     async with connect_manager() as client:
-        if resp := await client.get("/list", ManagedClientInfoList):
+        resp = await client.get("/list", ManagedClientInfoList)
+        if resp and resp.root:
             print(ManagedClientInfo.format(resp.root))
         else:
             print("No servers running.")

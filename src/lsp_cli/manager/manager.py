@@ -6,17 +6,12 @@ import sys
 from collections.abc import AsyncGenerator, Iterable
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 import anyio
-
-from lsp_cli.utils.logging import extra_filter
-
-if TYPE_CHECKING:
-    from loguru import Logger
-
 import asyncer
 import httpx
+import loguru
 from attrs import define, field
 from litestar import Litestar, delete, get, post
 from litestar.datastructures import State
@@ -29,6 +24,7 @@ from lsp_cli.settings import (
     MANAGER_UDS_PATH,
 )
 from lsp_cli.utils.http import AsyncHttpClient
+from lsp_cli.utils.logging import extra_filter
 from lsp_cli.utils.socket import is_socket_alive, wait_socket
 
 from .client import ManagedClient, get_client_id
@@ -44,7 +40,7 @@ from .models import (
 class Manager:
     _clients: dict[str, ManagedClient] = field(factory=dict, init=False)
     _tg: asyncer.TaskGroup = field(init=False)
-    _logger: Logger = field(init=False)
+    _logger: loguru.Logger = field(init=False)
     _sink_id: int = field(init=False)
 
     def _setup_logger(self) -> None:
@@ -59,7 +55,7 @@ class Manager:
         self._logger = logger
 
     def __attrs_post_init__(self) -> None:
-        self._logger = logger
+        self._setup_logger()
         self._logger.info("Manager initialized at {}", MANAGER_LOG_PATH)
 
     def _get_target(
@@ -184,7 +180,11 @@ async def list_clients_handler(state: State) -> list[ManagedClientInfo]:
 
 
 @post("/shutdown")
-async def shutdown_handler() -> None:
+async def shutdown_handler(state: State) -> None:
+    manager = get_manager(state)
+    manager._logger.info("Shutdown requested")
+    await manager.delete_client(all=True)
+    # shutdown uvicorn
     signal.raise_signal(signal.SIGINT)
 
 

@@ -123,6 +123,8 @@ class ManagedClient:
 
         def exception_handler(request: Request, exc: Exception) -> Response:
             self._logger.exception("Unhandled exception in Litestar: {}", exc)
+            self.stop()
+
             return Response(
                 content={"detail": str(exc)},
                 status_code=500,
