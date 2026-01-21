@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from loguru import logger
 
 from lsp_cli.utils.logging import extra_filter
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def setup_manager_logging(log_file: Path) -> None:
