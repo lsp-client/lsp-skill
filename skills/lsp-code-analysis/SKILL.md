@@ -305,7 +305,7 @@ lsp search "User" --max-items 20
 lsp doc api.py --scope fetch_data  # Get docs/types without jumping to definition
 
 # Verify locate strings if commands fail
-lsp locate main.py --scope 42 --find "process<|>"
+lsp locate main.py --scope 42 --find "<|>process_data"
 ```
 
 ### Domain-Specific Guides
