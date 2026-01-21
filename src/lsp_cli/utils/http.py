@@ -7,7 +7,7 @@ from typing import Self
 import httpx
 from anyio import AsyncContextManagerMixin
 from attrs import define
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel
 
 
 @define
@@ -32,10 +32,8 @@ class AsyncHttpClient(AsyncContextManagerMixin):
             json=json.model_dump(exclude_none=True, mode="json") if json else None,
         )
         resp.raise_for_status()
-        print(f"raw: {resp.text}")
         json = resp.json()
-        print(f"json: {json}")
-        return TypeAdapter(resp_schema).validate_python(json)
+        return resp_schema.model_validate(json)
 
     async def get[T: BaseModel](
         self,

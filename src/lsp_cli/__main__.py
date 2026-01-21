@@ -40,14 +40,14 @@ def run() -> None:
 
     try:
         app()
-    except Exception as e:
+    except Exception:  # noqa: BLE001
         client_id = current_client_id.get()
         client_log_path = get_client_log_path(client_id)
 
         print(
             dedent(
                 f"""
-                An error occurred: {e}
+                An error occurred.
                 For more details, check the logs:
                 manager: {MANAGER_LOG_PATH}
                 client: {client_log_path}
@@ -55,8 +55,6 @@ def run() -> None:
             ),
             file=sys.stderr,
         )
-
-        raise e
 
 
 if __name__ == "__main__":
