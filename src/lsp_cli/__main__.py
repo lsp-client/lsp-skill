@@ -16,7 +16,7 @@ from lsp_cli.cli import (
     symbol,
 )
 from lsp_cli.logging import setup_logging
-from lsp_cli.settings import CLIENT_LOG_DIR, MANAGER_LOG_PATH
+from lsp_cli.settings import MANAGER_LOG_PATH, get_client_log_path
 from lsp_cli.state import State
 from lsp_cli.state import state as global_state
 
@@ -49,13 +49,18 @@ def run() -> None:
     try:
         app()
     except Exception as e:  # noqa: BLE001
+        from lsp_cli.cli.utils import current_client_id
+
+        client_id = current_client_id.get()
+        client_log_path = get_client_log_path(client_id)
+
         print(
             dedent(
                 f"""
                 An error occurred: {e}
                 For more details, check the logs:
                     - manager: {MANAGER_LOG_PATH}
-                    - clients: {CLIENT_LOG_DIR}
+                    - clients: {client_log_path}
                 """
             ),
             file=sys.stderr,

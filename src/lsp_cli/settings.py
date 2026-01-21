@@ -17,6 +17,13 @@ MANAGER_LOG_PATH = LOG_DIR / "manager.log"
 CLIENT_LOG_DIR = LOG_DIR / "clients"
 MANAGER_UDS_PATH = RUNTIME_DIR / "manager.sock"
 
+
+def get_client_log_path(client_id: str | None) -> Path:
+    if client_id:
+        return CLIENT_LOG_DIR / f"{client_id}.log"
+    return CLIENT_LOG_DIR
+
+
 LogLevel = Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 

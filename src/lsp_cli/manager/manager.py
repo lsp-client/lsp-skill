@@ -7,13 +7,14 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from lsp_cli.utils.logging import extra_filter
+
 if TYPE_CHECKING:
     from loguru import Logger
 
-import anyio
 import asyncer
 import httpx
-from attrs import Factory, define, field
+from attrs import define, field
 from litestar import Litestar, delete, get, post
 from litestar.datastructures import State
 from litestar.exceptions import NotFoundException
@@ -21,7 +22,6 @@ from loguru import logger
 
 from lsp_cli.client import ClientTarget, find_target, match_target
 from lsp_cli.settings import (
-    CLIENT_LOG_DIR,
     MANAGER_LOG_PATH,
     MANAGER_UDS_PATH,
 )
@@ -29,7 +29,6 @@ from lsp_cli.utils.http import AsyncHttpClient
 from lsp_cli.utils.socket import is_socket_alive, wait_socket
 
 from .client import ManagedClient, get_client_id
-from .logging import setup_manager_logging
 from .models import (
     CreateClientRequest,
     CreateClientResponse,
@@ -41,12 +40,23 @@ from .models import (
 
 @define
 class Manager:
-    _clients: dict[str, ManagedClient] = Factory(dict)
+    _clients: dict[str, ManagedClient] = field(factory=dict, init=False)
     _tg: asyncer.TaskGroup = field(init=False)
     _logger: Logger = field(init=False)
+    _sink_id: int = field(init=False)
+
+    def _setup_logger(self) -> None:
+        MANAGER_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+        self._sink_id = logger.add(
+            MANAGER_LOG_PATH,
+            filter=extra_filter("client_id", exclude=True),
+            format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+            level="INFO",
+        )
+        self._logger = logger
 
     def __attrs_post_init__(self) -> None:
-        setup_manager_logging(MANAGER_LOG_PATH)
         self._logger = logger
         self._logger.info("Manager initialized at {}", MANAGER_LOG_PATH)
 
@@ -117,16 +127,12 @@ class Manager:
             async with asyncer.create_task_group() as tg:
                 self._tg = tg
                 yield self
-        except Exception:
-            self._logger.exception("Manager crashed due to unhandled exception")
-            raise
         finally:
             self._logger.info("Shutting down manager")
 
 
 @asynccontextmanager
 async def manager_lifespan(app: Litestar) -> AsyncGenerator[None]:
-    await anyio.Path(CLIENT_LOG_DIR).mkdir(parents=True, exist_ok=True)
     async with Manager().run() as manager:
         app.state.manager = manager
         yield
