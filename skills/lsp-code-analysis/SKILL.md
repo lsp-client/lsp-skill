@@ -45,45 +45,51 @@ All commands support `-h` or `--help`.
 
 ### Locating Symbols
 
-Most commands use a unified **Locate String** syntax via the `-L` or `--locate` option.
+Most commands use a unified locating syntax via the `--scope` and `--find` options.
 
-**Syntax**: `<file_path>[:<scope>][@<find>]`
+**Arguments**: `<file_path>`
 
-For Monorepo or Multi-root workspaces, see [monorepo.md](references/monorepo.md).
+**Options**:
+
+- `--scope`: Narrow search to a symbol body or line range.
+- `--find`: Text pattern to find within the scope.
 
 **Scope Formats**:
 
 - `<line>`: Single line number (e.g., `42`).
-- `<start>,<end>`: Line range with comma (e.g., `10,20`).
-- `<start>-<end>`: Line range with dash (e.g., `10-20`).
+- `<start>,<end>`: Line range (e.g., `10,20`). Use `0` for end to mean till EOF (e.g., `10,0`).
 - `<symbol_path>`: Symbol path with dots (e.g., `MyClass.my_method`).
 
-**Find Pattern (`@<find>`)**:
+**Find Pattern (`--find`)**:
 
-The optional `@<find>` suffix narrows the target to a **text pattern within the selected scope**:
+The `--find` option narrows the target to a **text pattern within the selected scope**:
 
-- The scope is determined by `<scope>` (line/range/symbol). If no `<scope>` is given, the entire file is the scope.
-- `<find>` is matched in a **whitespace-insensitive** way: differences in spaces, tabs, and newlines are ignored.
-- You MAY include the cursor marker `<|>` inside `<find>` to specify the **exact position of interest** within the match (for example, on a variable name, keyword, or operator).
-- If `<find>` is omitted, the command uses the start of the scope (or a tool-specific default) as the navigation target.
+- The scope is determined by `--scope` (line/range/symbol). If no `--scope` is given, the entire file is the scope.
+- Pattern matching is **whitespace-insensitive**: differences in spaces, tabs, and newlines are ignored.
+- You MAY include the cursor marker `<|>` inside the pattern to specify the **exact position of interest** within the match (for example, on a variable name, keyword, or operator).
+- If `--find` is omitted, the command uses the start of the scope (or a tool-specific default) as the navigation target.
 
 **Cursor Marker (`<|>`)**:
 
-The `<|>` marker indicates the exact position for symbol resolution. Use it within the find pattern to point to a specific element (e.g., `user.<|>name` to target the `name` property).
+The `<|>` marker indicates the exact position for symbol resolution. It represents the character immediately to its right. Use it within the find pattern to point to a specific element (e.g., `user.<|>name` to target the `name` property).
 
 **Examples**:
 
-- `foo.py@self.<|>` - Find `self.` in entire file, position at cursor marker
-- `foo.py:42@return <|>result` - Find `return result` on line 42, position at cursor marker
-- `foo.py:10,20@if <|>condition` - Find `if condition` in lines 10-20, position at cursor marker
-- `foo.py:MyClass.my_method@self.<|>` - Find `self.` within `MyClass.my_method`, position at cursor marker
-- `foo.py:MyClass` - Target the `MyClass` symbol directly
+- `lsp doc foo.py --find "self.<|>"` - Find `self.` in entire file, position at the character after the dot (typically for completion or member access)
+- `lsp doc foo.py --scope 42 --find "return <|>result"` - Find `return result` on line 42, position at `r` of `result`
+- `lsp doc foo.py --scope 10,20 --find "if <|>condition"` - Find `if condition` in lines 10-20, position at `c` of `condition`
+- `lsp doc foo.py --scope MyClass.my_method --find "self.<|>"` - Find `self.` within `MyClass.my_method`, position after the dot
+- `lsp doc foo.py --scope MyClass` - Target the `MyClass` symbol directly
 
-Agents MAY use `lsp locate <string>` with the `-c` or `--check` flag to verify if the target exists in the file and view its context before running other commands.
+**Guideline for Scope vs. Find**:
+- Use `--scope <symbol_path>` (e.g., `--scope MyClass.my_method`) when you want to target a **symbol's definition** or its entire body. This is more robust as it relies on semantic structure.
+- Use `--find` (often combined with `--scope`) when you need to target a **specific usage or location within a code block** (e.g., a specific variable access, a keyword, or an expression).
+
+Agents MAY use `lsp locate <file_path> --scope <scope> --find <find>` to verify if the target exists in the file and view its context before running other commands.
 
 ```bash
 # Verify location exists
-lsp locate "main.py:42@process_data" --check
+lsp locate main.py --scope 42 --find "<|>process_data"
 ```
 
 ### Outline: File Structure
@@ -106,16 +112,16 @@ Navigate to where symbols are defined.
 
 ```bash
 # Jump to where User.get_id is defined
-lsp definition -L "models.py:User.get_id"
+lsp definition models.py --scope User.get_id
 
 # Find where an imported variable comes from
-lsp definition -L "main.py:42@config<|>"
+lsp definition main.py --scope 42 --find "<|>config"
 
 # Find declaration (e.g., header files, interface declarations)
-lsp definition -L "models.py:25" --decl
+lsp definition models.py --scope 25 --mode declaration
 
 # Find the class definition of a variable's type
-lsp definition -L "models.py:30@user<|>" --type
+lsp definition models.py --scope 30 --find "<|>user" --mode type_definition
 ```
 
 ### Reference: Find All Usages
@@ -124,16 +130,16 @@ Find where symbols are used or implemented.
 
 ```bash
 # Find all places where logger is referenced
-lsp reference -L "main.py:MyClass.run@logger"
+lsp reference main.py --scope MyClass.run --find "<|>logger"
 
 # Find all concrete implementations of an interface/abstract class
-lsp reference -L "api.py@IDataProvider" --impl
+lsp reference api.py --find "<|>IDataProvider" --mode implementations
 
 # Get more surrounding code context for each reference
-lsp reference -L "app.py:10@TestClass" --context-lines 5
+lsp reference app.py --scope 10 --find "<|>TestClass" --context-lines 5
 
 # Limit results for large codebases
-lsp reference -L "utils.py:helper" --max-items 50 --start-index 0
+lsp reference utils.py --find "<|>helper" --max-items 50 --start-index 0
 ```
 
 ### Doc: Get Documentation
@@ -142,10 +148,10 @@ Get documentation and type information without navigating to source.
 
 ```bash
 # Get docstring and type info for symbol at line 42
-lsp doc -L "main.py:42"
+lsp doc main.py --scope 42
 
 # Get API documentation for process_data function
-lsp doc -L "models.py@process_data<|>"
+lsp doc models.py --find "<|>process_data"
 ```
 
 Agents SHOULD prefer `doc` over `read` when only documentation or type information is needed.
@@ -158,18 +164,18 @@ Search for symbols across the workspace when location is unknown.
 # Search by name (defaults to current directory)
 lsp search "MyClassName"
 
-# Search in specific workspace
-lsp search "UserModel" --workspace /path/to/project
+# Search in specific project
+lsp search "UserModel" --project /path/to/project
 
 # Filter by symbol kind (can specify multiple times)
-lsp search "init" --kind function --kind method
+lsp search "init" --kinds function --kinds method
 
 # Limit and paginate results for large codebases
 lsp search "Config" --max-items 10
 lsp search "User" --max-items 20 --start-index 0
 ```
 
-Agents SHOULD use `--kind` to filter results and reduce noise.
+Agents SHOULD use `--kinds` to filter results and reduce noise.
 
 ### Refactoring Operations
 
@@ -181,13 +187,13 @@ Get the full source code of the symbol containing a location.
 
 ```bash
 # Get complete code of the function/class at line 15
-lsp symbol -L "main.py:15"
+lsp symbol main.py --scope 15
 
 # Get full UserClass implementation
-lsp symbol -L "utils.py@UserClass<|>"
+lsp symbol utils.py --find "<|>UserClass"
 
 # Get complete method implementation
-lsp symbol -L "models.py:User.validate"
+lsp symbol models.py --scope User.validate
 ```
 
 Response includes: symbol name, kind (class/function/method), range, and **complete source code**.
@@ -199,8 +205,7 @@ Agents SHOULD use `symbol` to read targeted code blocks instead of using `read` 
 The background manager starts automatically. Manual control is OPTIONAL.
 
 ```bash
-# List running servers (default)
-lsp server
+# List running servers
 lsp server list
 
 # Start server for a project
@@ -208,6 +213,9 @@ lsp server start <path>
 
 # Stop server for a project
 lsp server stop <path>
+
+# Shutdown the background manager
+lsp server shutdown
 ```
 
 ## Best Practices
@@ -223,13 +231,13 @@ The RECOMMENDED sequence for exploring new codebases:
 lsp outline <file_path>
 
 # Step 2: Inspect signatures - Use doc to understand API contracts
-lsp doc -L "<file_path>:<symbol_name>"
+lsp doc <file_path> --scope <symbol_name>
 
 # Step 3: Navigate dependencies - Follow definition chains
-lsp definition -L "<file_path>:<symbol_name>"
+lsp definition <file_path> --scope <symbol_name>
 
 # Step 4: Map usage - Find where code is called with reference
-lsp reference -L "<file_path>:<symbol_name>"
+lsp reference <file_path> --scope <symbol_name>
 ```
 
 #### Debugging Unknown Behavior
@@ -239,33 +247,33 @@ lsp reference -L "<file_path>:<symbol_name>"
 lsp search "<symbol_name>"
 
 # Step 2: Verify implementation details
-lsp definition -L "<file_path>:<symbol_name>"
+lsp definition <file_path> --scope <symbol_name>
 
 # Step 3: Trace all callers to understand invocation context
-lsp reference -L "<file_path>:<symbol_name>"
+lsp reference <file_path> --scope <symbol_name>
 ```
 
 ### Finding Interface Implementations
 
 ```bash
 # Step 1: Locate interface definition
-lsp search "IUserService" --kind interface
+lsp search "IUserService" --kinds interface
 
 # Step 2: Find all implementations
-lsp reference -L "src/interfaces.py:IUserService" --impl
+lsp reference src/interfaces.py --scope IUserService --mode implementations
 ```
 
 ### Tracing Data Flow
 
 ```bash
 # Step 1: Find where data is created
-lsp search "UserDTO" --kind class
+lsp search "UserDTO" --kinds class
 
 # Step 2: Find where it's used
-lsp reference -L "models.py:UserDTO"
+lsp reference models.py --scope UserDTO
 
 # Step 3: Check transformations
-lsp doc -L "transform.py:map_to_dto"
+lsp doc transform.py --scope map_to_dto
 ```
 
 ### Understanding Type Hierarchies
@@ -275,10 +283,10 @@ lsp doc -L "transform.py:map_to_dto"
 lsp outline models.py
 
 # Step 2: Find subclasses (references to base)
-lsp reference -L "models.py:BaseModel"
+lsp reference models.py --scope BaseModel
 
 # Step 3: Check type definitions
-lsp definition -L "models.py:BaseModel" --type
+lsp definition models.py --scope BaseModel --mode type_definition
 ```
 
 ### Performance Tips
@@ -288,16 +296,16 @@ lsp definition -L "models.py:BaseModel" --type
 lsp outline large_file.py  # Better than: read large_file.py
 
 # Use symbol paths for nested structures (more precise than line numbers)
-lsp definition -L "models.py:User.Profile.validate"
+lsp definition models.py --scope User.Profile.validate
 
 # Limit results in large codebases
 lsp search "User" --max-items 20
 
 # Use doc to understand APIs without navigating to source
-lsp doc -L "api.py:fetch_data"  # Get docs/types without jumping to definition
+lsp doc api.py --scope fetch_data  # Get docs/types without jumping to definition
 
 # Verify locate strings if commands fail
-lsp locate "main.py:42@process<|>" --check
+lsp locate main.py --scope 42 --find "process<|>"
 ```
 
 ### Domain-Specific Guides
