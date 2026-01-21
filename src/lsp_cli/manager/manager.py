@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import signal
 import subprocess
 import sys
 from collections.abc import AsyncGenerator, Iterable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
+
+import anyio
 
 from lsp_cli.utils.logging import extra_filter
 
@@ -181,13 +184,8 @@ async def list_clients_handler(state: State) -> list[ManagedClientInfo]:
 
 
 @post("/shutdown")
-async def shutdown_handler(state: State) -> None:
-    import os
-    import signal
-
-    manager = get_manager(state)
-    manager._logger.info("Shutdown requested")
-    os.kill(os.getpid(), signal.SIGINT)
+async def shutdown_handler() -> None:
+    signal.raise_signal(signal.SIGINT)
 
 
 app: Final = Litestar(
@@ -201,18 +199,23 @@ app: Final = Litestar(
 )
 
 
-@asynccontextmanager
-async def connect_manager() -> AsyncGenerator[AsyncHttpClient]:
-    if not await is_socket_alive(MANAGER_UDS_PATH):
-        subprocess.Popen(
-            (sys.executable, "-m", "lsp_cli.manager"),
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
+async def start_manager() -> None:
+    await anyio.open_process(
+        (sys.executable, "-m", "lsp_cli.manager"),
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
 
     await wait_socket(MANAGER_UDS_PATH, timeout=10.0)
+
+
+@asynccontextmanager
+async def connect_manager(start: bool = True) -> AsyncGenerator[AsyncHttpClient]:
+    if start and not await is_socket_alive(MANAGER_UDS_PATH):
+        await start_manager()
+
     transport = httpx.AsyncHTTPTransport(uds=str(MANAGER_UDS_PATH), retries=5)
 
     async with AsyncHttpClient(

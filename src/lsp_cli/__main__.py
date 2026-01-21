@@ -3,7 +3,6 @@ from textwrap import dedent
 
 import cyclopts
 
-from lsp_cli import server
 from lsp_cli.cli import (
     definition,
     doc,
@@ -12,6 +11,7 @@ from lsp_cli.cli import (
     reference,
     rename,
     search,
+    server,
     symbol,
 )
 from lsp_cli.cli.utils import current_client_id

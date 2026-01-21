@@ -100,6 +100,7 @@ async def stop_server(
 @app.command(name="shutdown")
 async def shutdown_manager() -> None:
     """Shutdown the background LSP manager process."""
+
     async with connect_manager() as client:
         await client.post("/shutdown", RootModel[None])
         print("Success: Shutdown manager.")

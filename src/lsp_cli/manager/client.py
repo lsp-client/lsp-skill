@@ -18,6 +18,7 @@ from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import Capabilities, CapabilityController
 from lsp_cli.settings import RUNTIME_DIR, get_client_log_path, settings
 from lsp_cli.utils.logging import extra_filter
+from lsp_cli.utils.uds import open_uds
 
 from .models import GetIDResponse, ManagedClientInfo
 
@@ -149,15 +150,11 @@ class ManagedClient:
             self.uds_path,
         )
 
-        uds_path = anyio.Path(self.uds_path)
-        await uds_path.unlink(missing_ok=True)
-        await uds_path.parent.mkdir(parents=True, exist_ok=True)
-
-        try:
-            await self._serve()
-        finally:
-            self._logger.info("Cleaning up client")
-            logger.remove(self._sink_id)
-            await uds_path.unlink(missing_ok=True)
-            self._timeout_scope.cancel()
-            self._server_scope.cancel()
+        async with open_uds(self.uds_path):
+            try:
+                await self._serve()
+            finally:
+                self._logger.info("Cleaning up client")
+                logger.remove(self._sink_id)
+                self._timeout_scope.cancel()
+                self._server_scope.cancel()

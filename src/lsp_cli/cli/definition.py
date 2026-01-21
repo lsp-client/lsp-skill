@@ -22,14 +22,14 @@ async def definition(
         Literal["definition", "declaration", "type_definition"],
         cyclopts.Parameter(
             name=["--mode", "-m"],
-            help="Mode to locate symbol: `definition` (default), `declaration`, or `type_definition`.",
+            help="Mode to locate symbol.",
             show_default=True,
         ),
     ] = "definition",
     project: op.ProjectOpt = None,
 ) -> None:
     """
-    Find the definition (default), declaration (--mode declaration), or type definition (--mode type_definition) of a symbol.
+    Find the definition (default), declaration, or type definition of a symbol.
     """
 
     locate = create_locate(file_path, scope, find)

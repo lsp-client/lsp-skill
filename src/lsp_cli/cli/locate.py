@@ -1,3 +1,5 @@
+from typing import Annotated
+
 import cyclopts
 from lsap.schema.locate import LocateRequest, LocateResponse
 from pydantic import RootModel
@@ -14,8 +16,40 @@ app = cyclopts.App(
 @app.default
 async def locate(
     file_path: op.FilePathOpt,
-    scope: op.ScopeOpt = None,
-    find: op.FindOpt = None,
+    scope: Annotated[
+        str | None,
+        cyclopts.Parameter(
+            name=["--scope", "-s"],
+            help="""\
+Narrow search to a symbol body or line range.
+
+Formats:
+  line
+    Single line number (e.g., '42').
+  start,end
+    Line range (e.g., '10,20'). Use 0 for end to mean till EOF (e.g., '10,0').
+  symbol.path
+    Dot-separated symbol path (e.g., 'MyClass.my_method').""",
+        ),
+    ] = None,
+    find: Annotated[
+        str | None,
+        cyclopts.Parameter(
+            name=["--find"],
+            help="""\
+Text pattern with an optional position marker '<|>' for exact location.
+
+If no marker is provided, the position defaults to the start of the match.
+
+Marker Detection:
+  Use '<|>' for single level, '<<|>>' for double level if '<|>' appears in source, etc.
+
+Examples:
+  * "self.<|>"
+  * "return <|>result"
+  * "x = <|> + y <<|>> z\"""",
+        ),
+    ] = None,
     project: op.ProjectOpt = None,
 ) -> None:
     """
