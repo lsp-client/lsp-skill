@@ -6,18 +6,18 @@ from pathlib import Path
 
 import anyio
 import asyncer
-import structlog
 import uvicorn
 import xxhash
 from attrs import define, field
 from litestar import Controller, Litestar, Request, Response, get
 from litestar.datastructures import State
+from loguru import Logger, logger
 
 from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import Capabilities, CapabilityController
 from lsp_cli.settings import CLIENT_LOG_DIR, RUNTIME_DIR, settings
+from lsp_cli.utils.logging import extra_filter
 
-from .logging import get_client_logger
 from .models import ManagedClientInfo
 
 
@@ -47,12 +47,24 @@ class ManagedClient:
     _deadline: float = field(init=False)
     _should_exit: bool = False
 
-    _logger: structlog.BoundLogger = field(init=False)
+    _logger: Logger = field(init=False)
+    _sink_id: int = field(init=False)
+
+    def _setup_logger(self) -> None:
+        CLIENT_LOG_DIR.mkdir(parents=True, exist_ok=True)
+        log_file = CLIENT_LOG_DIR / f"{self.id}.log"
+        self._sink_id = logger.add(
+            log_file,
+            filter=extra_filter("client_id", self.id),
+            format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+            level="INFO",
+        )
+        self._logger = logger.bind(client_id=self.id)
 
     def __attrs_post_init__(self) -> None:
         self._deadline = anyio.current_time() + settings.idle_timeout
 
-        self._logger = get_client_logger(self.id, CLIENT_LOG_DIR)
+        self._setup_logger()
         self._logger.info("Client initialized")
 
     @property
@@ -144,6 +156,7 @@ class ManagedClient:
             await self._serve()
         finally:
             self._logger.info("Cleaning up client")
+            logger.remove(self._sink_id)
             await uds_path.unlink(missing_ok=True)
             self._timeout_scope.cancel()
             self._server_scope.cancel()
