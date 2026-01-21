@@ -14,9 +14,10 @@ from lsp_cli.cli import (
     server,
     symbol,
 )
-from lsp_cli.cli.utils import current_client_id
+from lsp_cli.exceptions import CapabilityCommandException
 from lsp_cli.logging import setup_logging
 from lsp_cli.settings import MANAGER_LOG_PATH, get_client_log_path
+from lsp_cli.state import env_state
 
 app = cyclopts.App(
     help="LSP CLI: A command-line tool for interacting with Language Server Protocol (LSP) features.",
@@ -41,21 +42,24 @@ def run() -> None:
 
     try:
         app()
-    except Exception:  # noqa: BLE001
-        client_id = current_client_id.get()
-        client_log_path = get_client_log_path(client_id)
+    except Exception as e:  # noqa: BLE001
+        match e:
+            case CapabilityCommandException() as cce:
+                client_log_path = get_client_log_path(cce.client_id)
+            case _:
+                client_log_path = get_client_log_path(None)
 
-        print(
-            dedent(
-                f"""
-                An error occurred.
-                For more details, check the logs:
-                manager: {MANAGER_LOG_PATH}
-                client: {client_log_path}
-                """
-            ),
-            file=sys.stderr,
-        )
+        print(f"An error occurred: {e}", file=sys.stderr)
+        if env_state.debug:
+            print(
+                dedent(
+                    f"""\
+                    For more details, check the logs:
+                    manager: {MANAGER_LOG_PATH}
+                    client: {client_log_path}"""
+                ),
+                file=sys.stderr,
+            )
 
 
 if __name__ == "__main__":

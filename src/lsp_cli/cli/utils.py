@@ -1,11 +1,11 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from contextvars import ContextVar
 from pathlib import Path
 
 import httpx
 from lsap.schema.locate import Locate
 
+from lsp_cli.exceptions import CapabilityCommandException
 from lsp_cli.manager.manager import connect_manager
 from lsp_cli.manager.models import (
     CreateClientRequest,
@@ -15,10 +15,6 @@ from lsp_cli.manager.models import (
 from lsp_cli.utils.http import AsyncHttpClient
 from lsp_cli.utils.locate import parse_scope
 from lsp_cli.utils.socket import wait_socket
-
-current_client_id: ContextVar[str | None] = ContextVar(
-    "current_client_id", default=None
-)
 
 
 @asynccontextmanager
@@ -34,8 +30,8 @@ async def connect_server(
             CreateClientResponse,
             json=CreateClientRequest(path=path.resolve(), project_path=project_path),
         )
+        uds_path = resp.uds_path
 
-    uds_path = resp.uds_path
     await wait_socket(uds_path, timeout=10.0)
 
     transport = httpx.AsyncHTTPTransport(uds=uds_path.as_posix())
@@ -43,12 +39,12 @@ async def connect_server(
         httpx.AsyncClient(transport=transport, base_url="http://localhost")
     ) as client:
         resp = await client.get("/client/id", GetIDResponse)
+        client_id = resp.id
 
-        token = current_client_id.set(resp.id)
         try:
             yield client
-        finally:
-            current_client_id.reset(token)
+        except Exception as e:
+            raise CapabilityCommandException(client_id=client_id) from e
 
 
 def create_locate(

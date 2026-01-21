@@ -21,6 +21,7 @@ async def symbol(
     """
     Get detailed symbol information.
     """
+
     locate = create_locate(file_path, scope, find)
 
     async with connect_server(locate.file_path, project_path=project) as client:
