@@ -15,7 +15,7 @@ from lsp_cli.cli import (
     search,
     symbol,
 )
-from lsp_cli.settings import CLI_LOG_PATH, MANAGER_LOG_PATH
+from lsp_cli.settings import CLIENT_LOG_DIR, MANAGER_LOG_PATH
 from lsp_cli.state import State
 from lsp_cli.state import state as global_state
 
@@ -51,9 +51,9 @@ def run() -> None:
             dedent(
                 f"""
                 An error occurred: {e}
-                For more details, check the log:
-                    - cli: {CLI_LOG_PATH}
+                For more details, check the logs:
                     - manager: {MANAGER_LOG_PATH}
+                    - clients: {CLIENT_LOG_DIR}
                 """
             ),
             file=sys.stderr,

@@ -6,17 +6,17 @@ from pathlib import Path
 
 import anyio
 import asyncer
-import loguru
+import structlog
 import uvicorn
 import xxhash
 from attrs import define, field
 from litestar import Litestar, Request, Response
-from loguru import logger as global_logger
 
 from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import Capabilities, CapabilityController
-from lsp_cli.settings import RUNTIME_DIR, settings
+from lsp_cli.settings import CLIENT_LOG_DIR, RUNTIME_DIR, settings
 
+from .logging import get_client_logger
 from .models import ManagedClientInfo
 
 
@@ -37,12 +37,12 @@ class ManagedClient:
     _deadline: float = field(init=False)
     _should_exit: bool = False
 
-    _logger: loguru.Logger = field(init=False)
+    _logger: structlog.BoundLogger = field(init=False)
 
     def __attrs_post_init__(self) -> None:
         self._deadline = anyio.current_time() + settings.idle_timeout
 
-        self._logger = global_logger.bind(client_id=self.id)
+        self._logger = get_client_logger(self.id, CLIENT_LOG_DIR)
         self._logger.info("Client initialized")
 
     @property
