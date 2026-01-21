@@ -18,7 +18,6 @@ async def reference(
     file_path: op.FilePathOpt,
     scope: op.ScopeOpt = None,
     find: op.FindOpt = None,
-    opts: op.GlobalOpts = op.GlobalOpts(),
     impl: Annotated[
         bool, cyclopts.Parameter(name="--impl", help="Find concrete implementations.")
     ] = False,

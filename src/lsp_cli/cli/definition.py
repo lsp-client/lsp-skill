@@ -18,7 +18,6 @@ async def definition(
     file_path: op.FilePathOpt,
     scope: op.ScopeOpt = None,
     find: op.FindOpt = None,
-    opts: op.GlobalOpts = op.GlobalOpts(),
     mode: Annotated[
         Literal["definition", "declaration", "type_definition"],
         cyclopts.Parameter(

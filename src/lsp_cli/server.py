@@ -21,13 +21,13 @@ app = cyclopts.App(
 
 
 @app.default
-async def default(opts: op.GlobalOpts = op.GlobalOpts()) -> None:
+async def default() -> None:
     """Manage LSP servers."""
-    await list_servers(opts)
+    await list_servers()
 
 
 @app.command(name="list")
-async def list_servers(opts: op.GlobalOpts = op.GlobalOpts()) -> None:
+async def list_servers() -> None:
     """List all currently running and managed LSP servers."""
     async with connect_manager() as client:
         if resp := await client.get("/list", ManagedClientInfoList):

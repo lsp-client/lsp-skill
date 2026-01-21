@@ -21,7 +21,6 @@ async def outline(
         Path,
         cyclopts.Parameter(help="Path to the file to get the symbol outline for."),
     ],
-    opts: op.GlobalOpts = op.GlobalOpts(),
     all_symbols: Annotated[
         bool,
         cyclopts.Parameter(

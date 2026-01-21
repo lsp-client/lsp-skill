@@ -25,7 +25,6 @@ async def search(
             help="The name or partial name of the symbol to search for."
         ),
     ],
-    opts: op.GlobalOpts = op.GlobalOpts(),
     workspace: op.WorkspaceOpt = None,
     kinds: Annotated[
         list[str] | None,

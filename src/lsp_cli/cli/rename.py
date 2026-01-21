@@ -27,7 +27,6 @@ async def preview(
     ],
     scope: op.ScopeOpt = None,
     find: op.FindOpt = None,
-    opts: op.GlobalOpts = op.GlobalOpts(),
     project: op.ProjectOpt = None,
 ) -> None:
     """
@@ -52,7 +51,6 @@ async def execute(
     rename_id: Annotated[
         str, cyclopts.Parameter(help="Rename ID from a previous preview.")
     ],
-    opts: op.GlobalOpts = op.GlobalOpts(),
     exclude: Annotated[
         list[str] | None,
         cyclopts.Parameter(
