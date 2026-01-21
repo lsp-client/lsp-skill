@@ -14,9 +14,8 @@ from litestar import Litestar, Request, Response
 from loguru import logger as global_logger
 
 from lsp_cli.client import ClientTarget
-from lsp_cli.logging import add_log_file
 from lsp_cli.manager.capability import Capabilities, CapabilityController
-from lsp_cli.settings import CLIENT_LOG_DIR, RUNTIME_DIR, settings
+from lsp_cli.settings import RUNTIME_DIR, settings
 
 from .models import ManagedClientInfo
 
@@ -39,18 +38,12 @@ class ManagedClient:
     _should_exit: bool = False
 
     _logger: loguru.Logger = field(init=False)
-    _logger_sink_id: int = field(init=False)
 
     def __attrs_post_init__(self) -> None:
         self._deadline = anyio.current_time() + settings.idle_timeout
 
-        client_log_dir = CLIENT_LOG_DIR
-        client_log_dir.mkdir(parents=True, exist_ok=True)
-
-        log_path = client_log_dir / f"{self.id}.log"
-        self._logger_sink_id = add_log_file(log_path)
         self._logger = global_logger.bind(client_id=self.id)
-        self._logger.info("Client log initialized at {}", log_path)
+        self._logger.info("Client initialized")
 
     @property
     def id(self) -> str:
@@ -142,6 +135,5 @@ class ManagedClient:
         finally:
             self._logger.info("Cleaning up client")
             await uds_path.unlink(missing_ok=True)
-            global_logger.remove(self._logger_sink_id)
             self._timeout_scope.cancel()
             self._server_scope.cancel()

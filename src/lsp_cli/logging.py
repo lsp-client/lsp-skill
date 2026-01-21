@@ -8,38 +8,6 @@ from lsp_cli.settings import settings
 from lsp_cli.state import state
 
 
-def add_log_file(
-    log_file: Path,
-    rotation: str = "10 MB",
-    retention: str = "1 day",
-    level: str | int | None = None,
-) -> int:
-    """Add a file sink to the logger.
-
-    Args:
-        log_file: Path to write logs to.
-        rotation: Log rotation policy.
-        retention: Log retention policy.
-        level: Log level. Defaults to settings.effective_log_level.
-
-    Returns:
-        The sink ID.
-    """
-
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    return logger.add(
-        log_file,
-        rotation=rotation,
-        retention=retention,
-        level=level or settings.log_level,
-        format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-        enqueue=True,
-        serialize=not state.debug,  # Use JSON in production (non-debug)
-        backtrace=True,
-        diagnose=True,
-    )
-
-
 def setup_logging(
     *,
     log_file: Path | None = None,
@@ -70,4 +38,15 @@ def setup_logging(
 
     # File handler
     if log_file:
-        add_log_file(log_file, rotation=rotation, retention=retention)
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        logger.add(
+            log_file,
+            rotation=rotation,
+            retention=retention,
+            level=settings.log_level,
+            format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+            enqueue=True,
+            serialize=not state.debug,  # Use JSON in production (non-debug)
+            backtrace=True,
+            diagnose=True,
+        )
