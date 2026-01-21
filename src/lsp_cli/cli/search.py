@@ -21,18 +21,17 @@ app = cyclopts.App(
 async def search(
     query: Annotated[
         str,
-        cyclopts.Parameter(
-            help="The name or partial name of the symbol to search for."
-        ),
+        cyclopts.Parameter(help="The fuzzy-match name of the symbol to search for."),
     ],
-    workspace: op.WorkspaceOpt = None,
+    /,
+    *,
     kinds: Annotated[
         list[str] | None,
         cyclopts.Parameter(
-            name=["--kind", "-k"],
             help="Filter by symbol kind (e.g., 'class', 'function'). Can be specified multiple times.",
         ),
     ] = None,
+    project: op.ProjectOpt = None,
     max_items: op.MaxItemsOpt = None,
     start_index: op.StartIndexOpt = 0,
     pagination_id: op.PaginationIdOpt = None,
@@ -40,7 +39,8 @@ async def search(
     """
     Search for symbols across the entire workspace by name query.
     """
-    async with connect_server(workspace or Path.cwd()) as client:
+
+    async with connect_server(project or Path.cwd()) as client:
         effective_max_items = (
             max_items if max_items is not None else settings.default_max_items
         )

@@ -44,6 +44,8 @@ async def start_server(
             help="Path to a code file or project directory to start the LSP server for."
         ),
     ],
+    /,
+    *,
     project: op.ProjectOpt = None,
 ) -> None:
     """Start a background LSP server for the project containing the specified path."""
@@ -65,6 +67,8 @@ async def stop_server(
             help="Path to a code file or project directory to stop the LSP server for."
         ),
     ] = None,
+    /,
+    *,
     all: Annotated[
         bool,
         cyclopts.Parameter(

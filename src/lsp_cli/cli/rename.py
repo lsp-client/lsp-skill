@@ -19,12 +19,9 @@ app = cyclopts.App(name="rename", help="Rename a symbol at a specific location."
 @app.command
 async def preview(
     file_path: op.FilePathOpt,
-    new_name: Annotated[
-        str,
-        cyclopts.Parameter(
-            name=["-n", "--new_name"], help="The new name for the symbol."
-        ),
-    ],
+    new_name: Annotated[str, cyclopts.Parameter(help="The new name for the symbol.")],
+    /,
+    *,
     scope: op.ScopeOpt = None,
     find: op.FindOpt = None,
     project: op.ProjectOpt = None,
@@ -32,6 +29,7 @@ async def preview(
     """
     Preview the effects of renaming a symbol.
     """
+
     locate = create_locate(file_path, scope, find)
 
     async with connect_server(locate.file_path, project_path=project) as client:
@@ -51,6 +49,8 @@ async def execute(
     rename_id: Annotated[
         str, cyclopts.Parameter(help="Rename ID from a previous preview.")
     ],
+    /,
+    *,
     exclude: Annotated[
         list[str] | None,
         cyclopts.Parameter(
@@ -58,36 +58,22 @@ async def execute(
             help="File paths or glob patterns to exclude from the rename operation. Can be specified multiple times.",
         ),
     ] = None,
-    workspace: op.WorkspaceOpt = None,
     project: op.ProjectOpt = None,
 ) -> None:
     """
     Execute a rename operation using the ID from a previous preview.
     """
-    if workspace is None:
-        workspace = Path.cwd()
 
-    if not workspace.is_absolute():
-        workspace = workspace.resolve()
+    # HACK convert glob to absolute path strings
+    exclude = [Path(glob).absolute().as_posix() for glob in (exclude or [])]
 
-    # Normalize exclude paths and globs to absolute paths/globs
-    normalized_exclude = []
-    if exclude:
-        cwd = Path.cwd()
-        for p in exclude:
-            p_obj = Path(p)
-            if p_obj.is_absolute():
-                normalized_exclude.append(p)
-            else:
-                normalized_exclude.append(str(cwd / p))
-
-    async with connect_server(workspace, project_path=project) as client:
+    async with connect_server(project or Path.cwd()) as client:
         match await client.post(
             "/capability/rename/execute",
             RootModel[RenameExecuteResponse | None],
             json=RenameExecuteRequest(
                 rename_id=rename_id,
-                exclude_files=normalized_exclude,
+                exclude_files=exclude,
             ),
         ):
             case RootModel(root=RenameExecuteResponse() as resp):

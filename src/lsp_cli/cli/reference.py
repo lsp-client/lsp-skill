@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
 import cyclopts
 from lsap.schema.reference import ReferenceRequest, ReferenceResponse
@@ -16,15 +16,21 @@ app = cyclopts.App(
 @app.default
 async def reference(
     file_path: op.FilePathOpt,
+    /,
+    *,
     scope: op.ScopeOpt = None,
     find: op.FindOpt = None,
-    impl: Annotated[
-        bool, cyclopts.Parameter(name="--impl", help="Find concrete implementations.")
-    ] = False,
+    mode: Annotated[
+        Literal["references", "implementations"],
+        cyclopts.Parameter(
+            help="Mode to locate symbol.",
+            show_default=True,
+        ),
+    ] = "references",
     context_lines: Annotated[
         int,
         cyclopts.Parameter(
-            name=["--context-lines", "-C"],
+            name=["--context-lines"],
             help="Number of lines of context to show around each match.",
         ),
     ] = 2,
@@ -36,7 +42,6 @@ async def reference(
     """
     Find references (default) or implementations (--impl) of a symbol.
     """
-    mode = "implementations" if impl else "references"
 
     locate = create_locate(file_path, scope, find)
 

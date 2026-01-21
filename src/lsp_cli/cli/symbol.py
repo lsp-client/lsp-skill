@@ -14,6 +14,8 @@ app = cyclopts.App(
 @app.default
 async def symbol(
     file_path: op.FilePathOpt,
+    /,
+    *,
     scope: op.ScopeOpt = None,
     find: op.FindOpt = None,
     project: op.ProjectOpt = None,

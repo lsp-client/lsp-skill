@@ -1,10 +1,11 @@
-from pathlib import Path
 from typing import Annotated
 
 import cyclopts
 from lsap.schema.models import SymbolKind
 from lsap.schema.outline import OutlineRequest, OutlineResponse
 from pydantic import RootModel
+
+from lsp_cli.cli.options import FilePathOpt
 
 from . import options as op
 from .utils import connect_server
@@ -17,10 +18,9 @@ app = cyclopts.App(
 
 @app.default
 async def outline(
-    file_path: Annotated[
-        Path,
-        cyclopts.Parameter(help="Path to the file to get the symbol outline for."),
-    ],
+    file_path: FilePathOpt,
+    /,
+    *,
     all_symbols: Annotated[
         bool,
         cyclopts.Parameter(

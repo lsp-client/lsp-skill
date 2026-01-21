@@ -16,12 +16,13 @@ app = cyclopts.App(
 @app.default
 async def definition(
     file_path: op.FilePathOpt,
+    /,
+    *,
     scope: op.ScopeOpt = None,
     find: op.FindOpt = None,
     mode: Annotated[
         Literal["definition", "declaration", "type_definition"],
         cyclopts.Parameter(
-            name=["--mode", "-m"],
             help="Mode to locate symbol.",
             show_default=True,
         ),

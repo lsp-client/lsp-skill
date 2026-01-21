@@ -13,14 +13,10 @@ app = cyclopts.App(name="locate")
 @app.default
 async def locate(
     file_path: op.FilePathOpt,
-    scope: Annotated[
-        str | None,
-        cyclopts.Parameter(name=["--scope", "-s"]),
-    ] = None,
-    find: Annotated[
-        str | None,
-        cyclopts.Parameter(name=["--find"]),
-    ] = None,
+    /,
+    *,
+    scope: Annotated[str | None, cyclopts.Parameter()] = None,
+    find: Annotated[str | None, cyclopts.Parameter()] = None,
     project: op.ProjectOpt = None,
 ) -> None:
     """
