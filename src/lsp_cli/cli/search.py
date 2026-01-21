@@ -4,9 +4,9 @@ from typing import Annotated
 import cyclopts
 from lsap.schema.models import SymbolKind
 from lsap.schema.search import SearchRequest, SearchResponse
+from pydantic import RootModel
 
 from lsp_cli.settings import settings
-from lsp_cli.utils.model import Nullable
 
 from . import options as op
 from .main import main_callback
@@ -50,7 +50,7 @@ async def search(
 
         match await client.post(
             "/capability/search",
-            Nullable[SearchResponse],
+            RootModel[SearchResponse | None],
             json=SearchRequest(
                 query=query,
                 kinds=[SymbolKind(k) for k in kinds] if kinds else None,
@@ -59,7 +59,7 @@ async def search(
                 pagination_id=pagination_id,
             ),
         ):
-            case Nullable(root=SearchResponse() as resp) if resp.items:
+            case RootModel(root=SearchResponse() as resp) if resp.items:
                 print(resp.format())
                 if effective_max_items and len(resp.items) >= effective_max_items:
                     print(

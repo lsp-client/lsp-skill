@@ -1,7 +1,6 @@
 import cyclopts
 from lsap.schema.locate import LocateRequest, LocateResponse
-
-from lsp_cli.utils.model import Nullable
+from pydantic import RootModel
 
 from . import options as op
 from .main import main_callback
@@ -30,10 +29,10 @@ async def locate(
     async with connect_server(locate_obj.file_path, project_path=project) as client:
         match await client.post(
             "/capability/locate",
-            Nullable[LocateResponse],
+            RootModel[LocateResponse | None],
             json=LocateRequest(locate=locate_obj),
         ):
-            case Nullable(root=LocateResponse() as resp):
+            case RootModel(root=LocateResponse() as resp):
                 print(resp.format())
-            case Nullable(root=None):
+            case RootModel(root=None):
                 print("No location found.")

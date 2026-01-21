@@ -4,8 +4,7 @@ from typing import Annotated
 import cyclopts
 from lsap.schema.models import SymbolKind
 from lsap.schema.outline import OutlineRequest, OutlineResponse
-
-from lsp_cli.utils.model import Nullable
+from pydantic import RootModel
 
 from . import options as op
 from .main import main_callback
@@ -42,10 +41,10 @@ async def outline(
     async with connect_server(file_path, project_path=project) as client:
         match await client.post(
             "/capability/outline",
-            Nullable[OutlineResponse],
+            RootModel[OutlineResponse | None],
             json=OutlineRequest(file_path=file_path.resolve()),
         ):
-            case Nullable(root=OutlineResponse() as resp) if resp.items:
+            case RootModel(root=OutlineResponse() as resp) if resp.items:
                 if not all_symbols:
                     filtered_items = [
                         item

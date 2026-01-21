@@ -2,8 +2,7 @@ from typing import Annotated, Literal
 
 import cyclopts
 from lsap.schema.definition import DefinitionRequest, DefinitionResponse
-
-from lsp_cli.utils.model import Nullable
+from lsap.schema.rename import RootModel
 
 from . import options as op
 from .main import main_callback
@@ -41,10 +40,10 @@ async def definition(
     async with connect_server(locate.file_path, project_path=project) as client:
         match await client.post(
             "/capability/definition",
-            Nullable[DefinitionResponse],
+            RootModel[DefinitionResponse | None],
             json=DefinitionRequest(locate=locate, mode=mode),
         ):
-            case Nullable(root=DefinitionResponse() as resp):
+            case RootModel(root=DefinitionResponse() as resp):
                 print(resp.format())
-            case Nullable(root=None):
+            case RootModel(root=None):
                 print("No definition found.")

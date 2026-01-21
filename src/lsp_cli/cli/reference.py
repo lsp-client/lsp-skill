@@ -2,8 +2,7 @@ from typing import Annotated
 
 import cyclopts
 from lsap.schema.reference import ReferenceRequest, ReferenceResponse
-
-from lsp_cli.utils.model import Nullable
+from pydantic import RootModel
 
 from . import options as op
 from .main import main_callback
@@ -47,7 +46,7 @@ async def reference(
     async with connect_server(locate_obj.file_path, project_path=project) as client:
         match await client.post(
             "/capability/reference",
-            Nullable[ReferenceResponse],
+            RootModel[ReferenceResponse | None],
             json=ReferenceRequest(
                 locate=locate_obj,
                 mode=mode,
@@ -57,7 +56,7 @@ async def reference(
                 pagination_id=pagination_id,
             ),
         ):
-            case Nullable(root=ReferenceResponse() as resp):
+            case RootModel(root=ReferenceResponse() as resp):
                 print(resp.format())
-            case Nullable(root=None):
+            case RootModel(root=None):
                 print(f"Warning: No {mode} found")

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Annotated
 
 import cyclopts
+from pydantic import RootModel
 
 from lsp_cli.cli import options as op
 from lsp_cli.cli.main import main_callback
@@ -14,7 +15,6 @@ from lsp_cli.manager.models import (
     ManagedClientInfo,
     ManagedClientInfoList,
 )
-from lsp_cli.utils.model import Nullable
 
 app = cyclopts.App(
     name="server",
@@ -80,12 +80,12 @@ async def stop_server(
     async with connect_manager() as client:
         match await client.delete(
             "/delete",
-            Nullable[DeleteClientResponse],
+            RootModel[DeleteClientResponse | None],
             json=DeleteClientRequest(path=path),
         ):
-            case Nullable(root=DeleteClientResponse(info=resp_info)):
+            case RootModel(root=DeleteClientResponse(info=resp_info)):
                 print(f"Success: Stopped server for {resp_info.project_path}")
-            case Nullable(root=None):
+            case RootModel(root=None):
                 print(f"Warning: No server running for {path}")
 
 

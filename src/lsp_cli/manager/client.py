@@ -10,7 +10,8 @@ import structlog
 import uvicorn
 import xxhash
 from attrs import define, field
-from litestar import Litestar, Request, Response
+from litestar import Controller, Litestar, Request, Response, get
+from litestar.datastructures import State
 
 from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import Capabilities, CapabilityController
@@ -24,6 +25,15 @@ def get_client_id(target: ClientTarget) -> str:
     kind = target.client_cls.get_language_config().kind
     path_hash = xxhash.xxh32_hexdigest(target.project_path.as_posix())
     return f"{kind.value}-{path_hash}-default"
+
+
+class ClientController(Controller):
+    path = "/client"
+
+    @get("/id")
+    def get_id(self, state: State) -> str:
+        managed_client: ManagedClient = state.managed_client
+        return managed_client.id
 
 
 @define
@@ -89,11 +99,11 @@ class ManagedClient:
     async def _serve(self) -> None:
         @asynccontextmanager
         async def lifespan(app: Litestar) -> AsyncGenerator[None]:
+            app.state.managed_client = self
             async with self.target.client_cls(
                 workspace=self.target.project_path,
                 request_timeout=120,
             ) as client:
-                app.state.client = client
                 app.state.capabilities = Capabilities.build(client)
                 yield
 
@@ -105,7 +115,7 @@ class ManagedClient:
             )
 
         app = Litestar(
-            route_handlers=[CapabilityController],
+            route_handlers=[CapabilityController, ClientController],
             lifespan=[lifespan],
             exception_handlers={Exception: exception_handler},
         )

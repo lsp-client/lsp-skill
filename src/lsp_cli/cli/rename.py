@@ -8,8 +8,7 @@ from lsap.schema.rename import (
     RenamePreviewRequest,
     RenamePreviewResponse,
 )
-
-from lsp_cli.utils.model import Nullable
+from pydantic import RootModel
 
 from . import options as op
 from .main import main_callback
@@ -41,12 +40,12 @@ async def preview(
     async with connect_server(locate_obj.file_path, project_path=project) as client:
         match await client.post(
             "/capability/rename/preview",
-            Nullable[RenamePreviewResponse],
+            RootModel[RenamePreviewResponse | None],
             json=RenamePreviewRequest(locate=locate_obj, new_name=new_name),
         ):
-            case Nullable(root=RenamePreviewResponse() as resp):
+            case RootModel(root=RenamePreviewResponse() as resp):
                 print(resp.format())
-            case Nullable(root=None):
+            case RootModel(root=None):
                 print("Warning: No rename possibilities found at the location")
 
 
@@ -90,13 +89,13 @@ async def execute(
     async with connect_server(workspace, project_path=project) as client:
         match await client.post(
             "/capability/rename/execute",
-            Nullable[RenameExecuteResponse],
+            RootModel[RenameExecuteResponse | None],
             json=RenameExecuteRequest(
                 rename_id=rename_id,
                 exclude_files=normalized_exclude,
             ),
         ):
-            case Nullable(root=RenameExecuteResponse() as resp):
+            case RootModel(root=RenameExecuteResponse() as resp):
                 print(resp.format())
             case _:
                 raise RuntimeError("Failed to execute rename")
