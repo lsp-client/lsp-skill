@@ -10,7 +10,6 @@ from lsp_cli.manager.models import (
     CreateClientRequest,
     CreateClientResponse,
     DeleteClientRequest,
-    DeleteClientResponse,
     ManagedClientInfo,
     ManagedClientInfoList,
 )
@@ -45,7 +44,6 @@ async def start_server(
             help="Path to a code file or project directory to start the LSP server for."
         ),
     ],
-    opts: op.GlobalOpts = op.GlobalOpts(),
     project: op.ProjectOpt = None,
 ) -> None:
     """Start a background LSP server for the project containing the specified path."""
@@ -62,26 +60,49 @@ async def start_server(
 @app.command(name="stop")
 async def stop_server(
     path: Annotated[
-        Path,
+        Path | None,
         cyclopts.Parameter(
             help="Path to a code file or project directory to stop the LSP server for."
         ),
-    ],
-    opts: op.GlobalOpts = op.GlobalOpts(),
+    ] = None,
+    all: Annotated[
+        bool,
+        cyclopts.Parameter(
+            name=["--all", "-a"],
+            help="Stop all running LSP servers.",
+        ),
+    ] = False,
 ) -> None:
-    """Stop the background LSP server for the project containing the specified path."""
-    path = path.resolve()
+    """Stop background LSP server(s)."""
+    if not all and path is None:
+        print("Error: Must provide a path or specify --all.")
+        return
 
     async with connect_manager() as client:
-        match await client.delete(
+        resp = await client.delete(
             "/delete",
-            RootModel[DeleteClientResponse | None],
-            json=DeleteClientRequest(path=path),
-        ):
-            case RootModel(root=DeleteClientResponse(info=resp_info)):
-                print(f"Success: Stopped server for {resp_info.project_path}")
-            case RootModel(root=None):
+            RootModel[list[ManagedClientInfo]],
+            json=DeleteClientRequest(
+                path=path.resolve() if path else None,
+                all=all,
+            ),
+        )
+        if stopped := resp.root:
+            for info in stopped:
+                print(f"Success: Stopped server for {info.project_path}")
+        else:
+            if all:
+                print("No servers running.")
+            else:
                 print(f"Warning: No server running for {path}")
+
+
+@app.command(name="shutdown")
+async def shutdown_manager() -> None:
+    """Shutdown the background LSP manager process."""
+    async with connect_manager() as client:
+        await client.post("/shutdown", RootModel[None])
+        print("Success: Shutdown manager.")
 
 
 if __name__ == "__main__":

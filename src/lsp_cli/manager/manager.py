@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Iterable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -33,7 +33,6 @@ from .models import (
     CreateClientRequest,
     CreateClientResponse,
     DeleteClientRequest,
-    DeleteClientResponse,
     ManagedClientInfo,
 )
 
@@ -102,13 +101,22 @@ class Manager:
             self._clients.pop(client.id, None)
 
     async def delete_client(
-        self, path: Path, project_path: Path | None = None
-    ) -> ManagedClientInfo | None:
-        if client := self._get_client(path, project_path):
+        self,
+        path: Path | None = None,
+        project_path: Path | None = None,
+        all: bool = False,
+    ) -> list[ManagedClientInfo]:
+        clients: Iterable[ManagedClient] = []
+        if all:
+            clients = self._clients.values()
+        elif path and (client := self._get_client(path, project_path)):
+            clients = [client]
+
+        for client in clients:
             self._logger.info("Stopping client: {client_id}", client_id=client.id)
             client.stop()
-            return client.info
-        return None
+
+        return [client.info for client in clients]
 
     def inspect_client(
         self, path: Path, project_path: Path | None = None
@@ -132,7 +140,7 @@ class Manager:
 
 
 @asynccontextmanager
-async def manager_lifespan(app: Litestar) -> AsyncGenerator[None]:
+async def lifespan(app: Litestar) -> AsyncGenerator[None]:
     async with Manager().run() as manager:
         app.state.manager = manager
         yield
@@ -159,13 +167,11 @@ async def create_client_handler(
 @delete("/delete", status_code=200)
 async def delete_client_handler(
     data: DeleteClientRequest, state: State
-) -> DeleteClientResponse | None:
+) -> list[ManagedClientInfo]:
     manager = get_manager(state)
-
-    if info := await manager.delete_client(data.path, project_path=data.project_path):
-        return DeleteClientResponse(info=info)
-
-    return None
+    return await manager.delete_client(
+        data.path, project_path=data.project_path, all=data.all
+    )
 
 
 @get("/list")
@@ -174,13 +180,24 @@ async def list_clients_handler(state: State) -> list[ManagedClientInfo]:
     return manager.list_clients()
 
 
+@post("/shutdown")
+async def shutdown_handler(state: State) -> None:
+    import os
+    import signal
+
+    manager = get_manager(state)
+    manager._logger.info("Shutdown requested")
+    os.kill(os.getpid(), signal.SIGINT)
+
+
 app: Final = Litestar(
     route_handlers=[
         create_client_handler,
         delete_client_handler,
         list_clients_handler,
+        shutdown_handler,
     ],
-    lifespan=[manager_lifespan],
+    lifespan=[lifespan],
 )
 
 

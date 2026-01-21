@@ -19,7 +19,7 @@ from lsp_cli.manager.capability import Capabilities, CapabilityController
 from lsp_cli.settings import RUNTIME_DIR, get_client_log_path, settings
 from lsp_cli.utils.logging import extra_filter
 
-from .models import ManagedClientInfo
+from .models import GetIDResponse, ManagedClientInfo
 
 
 def get_client_id(target: ClientTarget) -> str:
@@ -32,9 +32,9 @@ class ClientController(Controller):
     path = "/client"
 
     @get("/id")
-    async def get_id(self, state: State) -> str:
+    async def get_id(self, state: State) -> GetIDResponse:
         managed_client: ManagedClient = state.managed_client
-        return managed_client.id
+        return GetIDResponse(id=managed_client.id)
 
 
 @define

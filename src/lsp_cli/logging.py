@@ -11,10 +11,9 @@ def setup_logging() -> None:
 
     Only outputs to console (stderr).
     """
-    logger.remove()
 
-    if not state.debug:
-        logging.getLogger("httpx").setLevel(logging.WARNING)
+    logger.remove()
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
     logger.add(
         sys.stderr,

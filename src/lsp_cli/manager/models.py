@@ -35,8 +35,9 @@ class CreateClientResponse(BaseModel):
 
 
 class DeleteClientRequest(BaseModel):
-    path: Path
+    path: Path | None = None
     project_path: Path | None = None
+    all: bool = False
 
 
 class DeleteClientResponse(BaseModel):
@@ -53,3 +54,7 @@ class LspResponse(BaseModel):
 
 class LspNotification(BaseModel):
     payload: RawNotification
+
+
+class GetIDResponse(BaseModel):
+    id: str

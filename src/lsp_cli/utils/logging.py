@@ -22,7 +22,7 @@ def extra_filter(
         A filter function for loguru.
     """
 
-    def filter_func(record: Record) -> bool:
+    def filter_func(record: loguru.Record) -> bool:
         if value is None:
             match = key in record["extra"]
         else:

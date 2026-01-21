@@ -1,6 +1,5 @@
 import sys
 from textwrap import dedent
-from typing import Annotated
 
 import cyclopts
 
@@ -15,10 +14,9 @@ from lsp_cli.cli import (
     search,
     symbol,
 )
+from lsp_cli.cli.utils import current_client_id
 from lsp_cli.logging import setup_logging
 from lsp_cli.settings import MANAGER_LOG_PATH, get_client_log_path
-from lsp_cli.state import State
-from lsp_cli.state import state as global_state
 
 app = cyclopts.App(
     help="LSP CLI: A command-line tool for interacting with Language Server Protocol (LSP) features.",
@@ -37,20 +35,12 @@ app.command(symbol.app)
 app.command(search.app)
 
 
-@app.default
-def main(
-    state: Annotated[State, cyclopts.Parameter(name="*")] = State(),
-) -> None:
-    global_state.debug = state.debug
+def run() -> None:
     setup_logging()
 
-
-def run() -> None:
     try:
         app()
-    except Exception as e:  # noqa: BLE001
-        from lsp_cli.cli.utils import current_client_id
-
+    except Exception as e:
         client_id = current_client_id.get()
         client_log_path = get_client_log_path(client_id)
 
@@ -59,12 +49,14 @@ def run() -> None:
                 f"""
                 An error occurred: {e}
                 For more details, check the logs:
-                    - manager: {MANAGER_LOG_PATH}
-                    - clients: {client_log_path}
+                manager: {MANAGER_LOG_PATH}
+                client: {client_log_path}
                 """
             ),
             file=sys.stderr,
         )
+
+        raise e
 
 
 if __name__ == "__main__":

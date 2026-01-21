@@ -5,10 +5,13 @@ from pathlib import Path
 
 import httpx
 from lsap.schema.locate import Locate
-from pydantic import RootModel
 
 from lsp_cli.manager.manager import connect_manager
-from lsp_cli.manager.models import CreateClientRequest, CreateClientResponse
+from lsp_cli.manager.models import (
+    CreateClientRequest,
+    CreateClientResponse,
+    GetIDResponse,
+)
 from lsp_cli.utils.http import AsyncHttpClient
 from lsp_cli.utils.locate import parse_scope
 from lsp_cli.utils.socket import wait_socket
@@ -39,9 +42,9 @@ async def connect_server(
     async with AsyncHttpClient(
         httpx.AsyncClient(transport=transport, base_url="http://localhost")
     ) as client:
-        resp = await client.get("/client/id", RootModel[str])
+        resp = await client.get("/client/id", GetIDResponse)
 
-        token = current_client_id.set(resp.root)
+        token = current_client_id.set(resp.id)
         try:
             yield client
         finally:
