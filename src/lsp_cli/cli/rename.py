@@ -11,7 +11,6 @@ from lsap.schema.rename import (
 from pydantic import RootModel
 
 from . import options as op
-from .main import main_callback
 from .utils import connect_server, create_locate
 
 app = cyclopts.App(name="rename", help="Rename a symbol at a specific location.")
@@ -34,7 +33,6 @@ async def preview(
     """
     Preview the effects of renaming a symbol.
     """
-    main_callback(opts.debug)
     locate_obj = create_locate(file_path, scope, find)
 
     async with connect_server(locate_obj.file_path, project_path=project) as client:
@@ -68,7 +66,6 @@ async def execute(
     """
     Execute a rename operation using the ID from a previous preview.
     """
-    main_callback(opts.debug)
     if workspace is None:
         workspace = Path.cwd()
 

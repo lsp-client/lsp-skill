@@ -3,7 +3,6 @@ from lsap.schema.locate import LocateRequest, LocateResponse
 from pydantic import RootModel
 
 from . import options as op
-from .main import main_callback
 from .utils import connect_server, create_locate
 
 app = cyclopts.App(
@@ -23,7 +22,6 @@ async def locate(
     """
     Locate a position or range in the codebase.
     """
-    main_callback(opts.debug)
     locate_obj = create_locate(file_path, scope, find)
 
     async with connect_server(locate_obj.file_path, project_path=project) as client:

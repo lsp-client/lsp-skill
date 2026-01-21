@@ -7,7 +7,6 @@ from lsap.schema.outline import OutlineRequest, OutlineResponse
 from pydantic import RootModel
 
 from . import options as op
-from .main import main_callback
 from .utils import connect_server
 
 app = cyclopts.App(
@@ -35,8 +34,6 @@ async def outline(
     """
     Get the hierarchical symbol outline (classes, functions, etc.) for a specific file.
     """
-
-    main_callback(opts.debug)
 
     async with connect_server(file_path, project_path=project) as client:
         match await client.post(

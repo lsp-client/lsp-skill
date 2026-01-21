@@ -3,7 +3,6 @@ from lsap.schema.doc import DocRequest, DocResponse
 from pydantic import RootModel
 
 from . import options as op
-from .main import main_callback
 from .utils import connect_server, create_locate
 
 app = cyclopts.App(
@@ -23,7 +22,6 @@ async def doc(
     """
     Get documentation and type information for a symbol.
     """
-    main_callback(opts.debug)
 
     locate_obj = create_locate(file_path, scope, find)
 

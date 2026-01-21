@@ -5,7 +5,6 @@ import cyclopts
 from pydantic import RootModel
 
 from lsp_cli.cli import options as op
-from lsp_cli.cli.main import main_callback
 from lsp_cli.manager.manager import connect_manager
 from lsp_cli.manager.models import (
     CreateClientRequest,
@@ -25,14 +24,12 @@ app = cyclopts.App(
 @app.default
 async def default(opts: op.GlobalOpts = op.GlobalOpts()) -> None:
     """Manage LSP servers."""
-    main_callback(opts.debug)
     await list_servers(opts)
 
 
 @app.command(name="list")
 async def list_servers(opts: op.GlobalOpts = op.GlobalOpts()) -> None:
     """List all currently running and managed LSP servers."""
-    main_callback(opts.debug)
     async with connect_manager() as client:
         if resp := await client.get("/list", ManagedClientInfoList):
             print(ManagedClientInfo.format(resp.root))
@@ -52,7 +49,6 @@ async def start_server(
     project: op.ProjectOpt = None,
 ) -> None:
     """Start a background LSP server for the project containing the specified path."""
-    main_callback(opts.debug)
     async with connect_manager() as client:
         if resp := await client.post(
             "/create",
@@ -74,7 +70,6 @@ async def stop_server(
     opts: op.GlobalOpts = op.GlobalOpts(),
 ) -> None:
     """Stop the background LSP server for the project containing the specified path."""
-    main_callback(opts.debug)
     path = path.resolve()
 
     async with connect_manager() as client:

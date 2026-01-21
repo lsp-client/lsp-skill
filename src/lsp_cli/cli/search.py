@@ -9,7 +9,6 @@ from pydantic import RootModel
 from lsp_cli.settings import settings
 
 from . import options as op
-from .main import main_callback
 from .utils import connect_server
 
 app = cyclopts.App(
@@ -42,7 +41,6 @@ async def search(
     """
     Search for symbols across the entire workspace by name query.
     """
-    main_callback(opts.debug)
     async with connect_server(workspace or Path.cwd()) as client:
         effective_max_items = (
             max_items if max_items is not None else settings.default_max_items

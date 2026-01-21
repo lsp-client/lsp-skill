@@ -5,7 +5,6 @@ from lsap.schema.reference import ReferenceRequest, ReferenceResponse
 from pydantic import RootModel
 
 from . import options as op
-from .main import main_callback
 from .utils import connect_server, create_locate
 
 app = cyclopts.App(
@@ -38,7 +37,6 @@ async def reference(
     """
     Find references (default) or implementations (--impl) of a symbol.
     """
-    main_callback(opts.debug)
     mode = "implementations" if impl else "references"
 
     locate_obj = create_locate(file_path, scope, find)

@@ -5,7 +5,6 @@ from lsap.schema.definition import DefinitionRequest, DefinitionResponse
 from lsap.schema.rename import RootModel
 
 from . import options as op
-from .main import main_callback
 from .utils import connect_server, create_locate
 
 app = cyclopts.App(
@@ -34,7 +33,6 @@ async def definition(
     Find the definition (default), declaration (--mode declaration), or type definition (--mode type_definition) of a symbol.
     """
 
-    main_callback(opts.debug)
     locate = create_locate(file_path, scope, find)
 
     async with connect_server(locate.file_path, project_path=project) as client:

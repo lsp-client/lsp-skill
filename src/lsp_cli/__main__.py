@@ -15,6 +15,7 @@ from lsp_cli.cli import (
     search,
     symbol,
 )
+from lsp_cli.logging import setup_logging
 from lsp_cli.settings import CLIENT_LOG_DIR, MANAGER_LOG_PATH
 from lsp_cli.state import State
 from lsp_cli.state import state as global_state
@@ -41,12 +42,13 @@ def main(
     state: Annotated[State, cyclopts.Parameter(name="*")] = State(),
 ) -> None:
     global_state.debug = state.debug
+    setup_logging()
 
 
 def run() -> None:
     try:
         app()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(
             dedent(
                 f"""

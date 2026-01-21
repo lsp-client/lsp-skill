@@ -1,8 +1,9 @@
-from attrs import define
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@define
-class State:
+class State(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="LSP_")
+
     debug: bool = False
     "Enable verbose debug logging for troubleshooting."
 

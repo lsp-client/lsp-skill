@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from loguru import Record
+import loguru
 
 
 def extra_filter(
     key: str, value: object = None, *, exclude: bool = False
-) -> Callable[[Record], bool]:
+) -> Callable[[loguru.Record], bool]:
     """Create a loguru filter based on extra context.
 
     If value is None, it checks for the existence of the key.

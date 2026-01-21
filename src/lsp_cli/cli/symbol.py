@@ -3,7 +3,6 @@ from lsap.schema.symbol import SymbolRequest, SymbolResponse
 from pydantic import RootModel
 
 from . import options as op
-from .main import main_callback
 from .utils import connect_server, create_locate
 
 app = cyclopts.App(
@@ -23,7 +22,6 @@ async def symbol(
     """
     Get detailed symbol information.
     """
-    main_callback(opts.debug)
     locate = create_locate(file_path, scope, find)
 
     async with connect_server(locate.file_path, project_path=project) as client:

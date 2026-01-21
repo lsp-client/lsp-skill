@@ -6,12 +6,13 @@ from pathlib import Path
 
 import anyio
 import asyncer
+import loguru
 import uvicorn
 import xxhash
 from attrs import define, field
 from litestar import Controller, Litestar, Request, Response, get
 from litestar.datastructures import State
-from loguru import Logger, logger
+from loguru import logger
 
 from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import Capabilities, CapabilityController
@@ -31,7 +32,7 @@ class ClientController(Controller):
     path = "/client"
 
     @get("/id")
-    def get_id(self, state: State) -> str:
+    async def get_id(self, state: State) -> str:
         managed_client: ManagedClient = state.managed_client
         return managed_client.id
 
@@ -47,7 +48,7 @@ class ManagedClient:
     _deadline: float = field(init=False)
     _should_exit: bool = False
 
-    _logger: Logger = field(init=False)
+    _logger: loguru.Logger = field(init=False)
     _sink_id: int = field(init=False)
 
     def _setup_logger(self) -> None:
