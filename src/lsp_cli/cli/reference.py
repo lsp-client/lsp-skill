@@ -38,14 +38,14 @@ async def reference(
     """
     mode = "implementations" if impl else "references"
 
-    locate_obj = create_locate(file_path, scope, find)
+    locate = create_locate(file_path, scope, find)
 
-    async with connect_server(locate_obj.file_path, project_path=project) as client:
+    async with connect_server(locate.file_path, project_path=project) as client:
         match await client.post(
             "/capability/reference",
             RootModel[ReferenceResponse | None],
             json=ReferenceRequest(
-                locate=locate_obj,
+                locate=locate,
                 mode=mode,
                 context_lines=context_lines,
                 max_items=max_items,

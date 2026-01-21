@@ -22,13 +22,13 @@ async def doc(
     Get documentation and type information for a symbol.
     """
 
-    locate_obj = create_locate(file_path, scope, find)
+    locate = create_locate(file_path, scope, find)
 
-    async with connect_server(locate_obj.file_path, project_path=project) as client:
+    async with connect_server(locate.file_path, project_path=project) as client:
         match await client.post(
             "/capability/doc",
             RootModel[DocResponse | None],
-            json=DocRequest(locate=locate_obj),
+            json=DocRequest(locate=locate),
         ):
             case RootModel(root=DocResponse() as resp):
                 print(resp.format())

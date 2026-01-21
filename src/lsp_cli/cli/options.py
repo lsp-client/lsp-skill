@@ -45,7 +45,7 @@ ScopeOpt = Annotated[
     str | None,
     Parameter(
         name=["--scope", "-s"],
-        help="Narrow search to a line, range, or symbol. See 'lsp locate --help' for details.",
+        help="Narrow search to a line, range, or symbol. See 'lsp locate --help' for syntax details.",
     ),
 ]
 
@@ -53,7 +53,7 @@ FindOpt = Annotated[
     str | None,
     Parameter(
         name=["--find"],
-        help="Text pattern to find. See 'lsp locate --help' for details.",
+        help="Text pattern to find. See 'lsp locate --help' for syntax details.",
     ),
 ]
 

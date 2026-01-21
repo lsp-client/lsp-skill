@@ -20,6 +20,7 @@ from lsp_cli.settings import MANAGER_LOG_PATH, get_client_log_path
 
 app = cyclopts.App(
     help="LSP CLI: A command-line tool for interacting with Language Server Protocol (LSP) features.",
+    help_format="markdown",
     help_formatter="plain",
 )
 

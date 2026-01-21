@@ -32,13 +32,13 @@ async def preview(
     """
     Preview the effects of renaming a symbol.
     """
-    locate_obj = create_locate(file_path, scope, find)
+    locate = create_locate(file_path, scope, find)
 
-    async with connect_server(locate_obj.file_path, project_path=project) as client:
+    async with connect_server(locate.file_path, project_path=project) as client:
         match await client.post(
             "/capability/rename/preview",
             RootModel[RenamePreviewResponse | None],
-            json=RenamePreviewRequest(locate=locate_obj, new_name=new_name),
+            json=RenamePreviewRequest(locate=locate, new_name=new_name),
         ):
             case RootModel(root=RenamePreviewResponse() as resp):
                 print(resp.format())
