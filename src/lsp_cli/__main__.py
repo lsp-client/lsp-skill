@@ -24,6 +24,8 @@ app = cyclopts.App(
     help="LSP CLI: A command-line tool for interacting with Language Server Protocol (LSP) features.",
     help_format="markdown",
     help_formatter="plain",
+    print_error=False,
+    exit_on_error=False,
 )
 
 # Add sub-apps
