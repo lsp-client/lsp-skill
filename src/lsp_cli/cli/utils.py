@@ -1,5 +1,5 @@
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 
 import httpx
@@ -24,27 +24,42 @@ async def connect_server(
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")
 
-    async with connect_manager() as client:
-        resp = await client.post(
-            "/create",
-            CreateClientResponse,
-            json=CreateClientRequest(path=path.resolve(), project_path=project_path),
-        )
-        uds_path = resp.uds_path
+    try:
+        async with connect_manager() as client:
+            resp = await client.post(
+                "/create",
+                CreateClientResponse,
+                json=CreateClientRequest(
+                    path=path.resolve(), project_path=project_path
+                ),
+            )
+            uds_path = resp.uds_path
 
-    await wait_socket(uds_path, timeout=10.0)
+        await wait_socket(uds_path, timeout=10.0)
 
-    transport = httpx.AsyncHTTPTransport(uds=uds_path.as_posix())
-    async with AsyncHttpClient(
-        httpx.AsyncClient(transport=transport, base_url="http://localhost")
-    ) as client:
-        resp = await client.get("/client/id", GetIDResponse)
-        client_id = resp.id
+        transport = httpx.AsyncHTTPTransport(uds=uds_path.as_posix())
+        async with AsyncHttpClient(
+            httpx.AsyncClient(transport=transport, base_url="http://localhost")
+        ) as client:
+            resp = await client.get("/client/id", GetIDResponse)
+            client_id = resp.id
 
-        try:
-            yield client
-        except Exception as e:
-            raise CapabilityCommandException(client_id=client_id) from e
+            try:
+                yield client
+            except httpx.HTTPStatusError as e:
+                detail = str(e)
+                with suppress(Exception):
+                    detail = e.response.json().get("detail", detail)
+                raise CapabilityCommandException(
+                    client_id=client_id, message=detail
+                ) from e
+            except Exception as e:
+                raise CapabilityCommandException(client_id=client_id) from e
+    except httpx.HTTPStatusError as e:
+        detail = str(e)
+        with suppress(Exception):
+            detail = e.response.json().get("detail", detail)
+        raise RuntimeError(detail) from e
 
 
 def create_locate(

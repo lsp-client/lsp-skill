@@ -81,11 +81,10 @@ class Manager:
                 )
                 existing_client._reset_timeout()
                 return existing_client.uds_path
-            else:
-                self._logger.info(
-                    "Existing client is shutting down, will create new one: {client_id}",
-                    client_id=existing_client.id,
-                )
+            self._logger.info(
+                "Existing client is shutting down, will create new one: {client_id}",
+                client_id=existing_client.id,
+            )
 
         target = self._get_target(path, project_path)
         if not target:
