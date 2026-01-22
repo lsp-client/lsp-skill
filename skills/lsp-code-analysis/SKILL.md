@@ -43,6 +43,25 @@ You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and
 
 All commands support `-h` or `--help`.
 
+### Pagination
+
+Use pagination for large result sets in `reference` and `search`. **Pagination is only active when `--pagination-id` is provided.**
+
+- `--pagination-id <ID>`: **(Required)** Unique session ID for consistent paging.
+- `--max-items <N>`: Page size.
+- `--start-index <N>`: Offset (0-based).
+
+**Example**:
+```bash
+# Page 1
+lsp search "User" --max-items 20 --pagination-id "task_123"
+
+# Page 2
+lsp search "User" --max-items 20 --start-index 20 --pagination-id "task_123"
+```
+
+**Guideline**: Use pagination with a unique ID for common symbols to fetch results in manageable chunks. Increment `--start-index` using the same ID to browse.
+
 ### Locating Symbols
 
 Most commands use a unified locating syntax via the `--scope` and `--find` options.

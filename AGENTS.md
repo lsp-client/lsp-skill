@@ -17,6 +17,11 @@
    - Stable (`v*.*.*`): Publish to PyPI + GitHub Release
    - Beta (`v*.*.*-beta.*`): Publish to TestPyPI + Pre-release
 
+## Submodule Management
+
+- This repository contains submodules in `packages/LSAP` and `packages/lsp-client`.
+- **Pull Requests**: When modifying code within these submodules, always create the PR in the submodule's own repository.
+
 ## Code Style Guidelines
 
 - Python: 3.13+ required
