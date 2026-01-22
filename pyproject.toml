@@ -31,6 +31,15 @@ dependencies = [
     "cyclopts>=4.5.0",
 ]
 
+[tool.uv.sources]
+lsp-client = { workspace = true }
+lsap-sdk = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+  "packages/*"
+]
+
 [project.scripts]
 lsp = "lsp_cli.__main__:run"
 

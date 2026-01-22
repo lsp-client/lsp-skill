@@ -74,11 +74,18 @@ class Manager:
 
     async def create_client(self, path: Path, project_path: Path | None = None) -> Path:
         if existing_client := self._get_client(path, project_path):
-            self._logger.info(
-                "Reusing existing client: {client_id}", client_id=existing_client.id
-            )
-            existing_client._reset_timeout()
-            return existing_client.uds_path
+            # Only reuse if client is not shutting down
+            if not existing_client._should_exit:
+                self._logger.info(
+                    "Reusing existing client: {client_id}", client_id=existing_client.id
+                )
+                existing_client._reset_timeout()
+                return existing_client.uds_path
+            else:
+                self._logger.info(
+                    "Existing client is shutting down, will create new one: {client_id}",
+                    client_id=existing_client.id,
+                )
 
         target = self._get_target(path, project_path)
         if not target:
