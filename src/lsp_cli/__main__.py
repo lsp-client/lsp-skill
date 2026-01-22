@@ -1,3 +1,4 @@
+import signal
 import sys
 from textwrap import dedent
 
@@ -38,6 +39,12 @@ app.command(search.app)
 
 
 def run() -> None:
+    if sys.platform != "win32":
+        # Restore default SIGPIPE behavior to prevent BrokenPipeError when piping to tools like `head`.
+        # This allows the OS to terminate the process immediately when the pipe closes, avoiding
+        # tracebacks and "Exception ignored" messages during Python's interpreter shutdown.
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
     setup_logging()
 
     try:
