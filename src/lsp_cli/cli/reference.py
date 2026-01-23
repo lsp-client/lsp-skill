@@ -1,40 +1,39 @@
 from typing import Annotated, Literal
 
-import typer
+import cyclopts
 from lsap.schema.reference import ReferenceRequest, ReferenceResponse
-
-from lsp_cli.settings import settings
-from lsp_cli.utils.sync import cli_syncify
+from pydantic import RootModel
 
 from . import options as op
-from .shared import create_locate, managed_client
+from .utils import connect_server, create_locate
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="reference",
+    help="Find references or implementations of a symbol.",
+)
 
 
-@app.command("reference")
-@cli_syncify
-async def get_reference(
-    locate: op.LocateOpt,
+@app.default
+async def reference(
+    file_path: op.FilePathOpt,
+    /,
+    *,
+    scope: op.ScopeOpt = None,
+    find: op.FindOpt = None,
     mode: Annotated[
         Literal["references", "implementations"],
-        typer.Option(
-            "--mode",
-            "-m",
-            help="Search mode (default: references).",
-            hidden=True,
+        cyclopts.Parameter(
+            help="Mode to locate symbol.",
+            show_default=True,
         ),
     ] = "references",
-    impl: bool = typer.Option(False, "--impl", help="Find concrete implementations."),
-    references: bool = typer.Option(False, "--ref", help="Find all usages."),
     context_lines: Annotated[
-        int | None,
-        typer.Option(
-            "--context-lines",
-            "-C",
+        int,
+        cyclopts.Parameter(
+            name=["--context-lines"],
             help="Number of lines of context to show around each match.",
         ),
-    ] = None,
+    ] = 2,
     max_items: op.MaxItemsOpt = None,
     start_index: op.StartIndexOpt = 0,
     pagination_id: op.PaginationIdOpt = None,
@@ -43,37 +42,23 @@ async def get_reference(
     """
     Find references (default) or implementations (--impl) of a symbol.
     """
-    if impl and references:
-        raise ValueError("--impl and --ref are mutually exclusive")
 
-    if impl:
-        mode = "implementations"
-    elif references:
-        mode = "references"
+    locate = create_locate(file_path, scope, find)
 
-    locate_obj = create_locate(locate)
-
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
-        effective_context_lines = (
-            context_lines
-            if context_lines is not None
-            else settings.default_context_lines
-        )
-
-        resp_obj = await client.post(
+    async with connect_server(locate.file_path, project_path=project) as client:
+        match await client.post(
             "/capability/reference",
-            ReferenceResponse,
+            RootModel[ReferenceResponse | None],
             json=ReferenceRequest(
-                locate=locate_obj,
+                locate=locate,
                 mode=mode,
-                context_lines=effective_context_lines,
+                context_lines=context_lines,
                 max_items=max_items,
                 start_index=start_index,
                 pagination_id=pagination_id,
             ),
-        )
-
-    if resp_obj:
-        print(resp_obj.format())
-    else:
-        print(f"Warning: No {mode} found")
+        ):
+            case RootModel(root=ReferenceResponse() as resp):
+                print(resp.format())
+            case RootModel(root=None):
+                print(f"Warning: No {mode} found")

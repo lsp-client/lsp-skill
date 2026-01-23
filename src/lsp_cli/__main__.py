@@ -1,7 +1,8 @@
-import logging
+import signal
 import sys
+from textwrap import dedent
 
-import typer
+import cyclopts
 from loguru import logger
 
 from lsp_cli.cli import (
@@ -12,61 +13,64 @@ from lsp_cli.cli import (
     reference,
     rename,
     search,
+    server,
     symbol,
 )
-from lsp_cli.cli.main import main_callback
-from lsp_cli.cli.shared import get_msg
-from lsp_cli.server import app as server_app
-from lsp_cli.settings import CLI_LOG_PATH, CLIENT_LOG_DIR, MANAGER_LOG_PATH, settings
+from lsp_cli.exceptions import CapabilityCommandException
+from lsp_cli.logging import setup_logging
+from lsp_cli.settings import MANAGER_LOG_PATH, get_client_log_path
+from lsp_cli.state import env_state
 
-app = typer.Typer(
+app = cyclopts.App(
     help="LSP CLI: A command-line tool for interacting with Language Server Protocol (LSP) features.",
-    context_settings={
-        "help_option_names": ["-h", "--help"],
-        "max_content_width": 1000,
-        "terminal_width": 1000,
-        "ignore_unknown_options": True,
-        "allow_extra_args": True,
-    },
-    add_completion=False,
-    rich_markup_mode=None,
-    pretty_exceptions_enable=False,
+    help_format="markdown",
+    help_formatter="plain",
+    print_error=False,
+    exit_on_error=False,
 )
 
-# Set callback
-app.callback(invoke_without_command=True)(main_callback)
-
-# Add sub-typers
-app.add_typer(server_app)
-app.add_typer(rename.app)
-app.add_typer(definition.app)
-app.add_typer(doc.app)
-app.add_typer(locate.app)
-app.add_typer(reference.app)
-app.add_typer(outline.app)
-app.add_typer(symbol.app)
-app.add_typer(search.app)
+# Add sub-apps
+app.command(server.app)
+app.command(rename.app)
+app.command(definition.app)
+app.command(doc.app)
+app.command(locate.app)
+app.command(reference.app)
+app.command(outline.app)
+app.command(symbol.app)
+app.command(search.app)
 
 
+@logger.catch
 def run() -> None:
-    # Suppress httpx INFO logs in CLI (unless debug mode)
-    if not settings.debug:
-        logging.getLogger("httpx").setLevel(logging.WARNING)
+    if sys.platform != "win32":
+        # Restore default SIGPIPE behavior to prevent BrokenPipeError when piping to tools like `head`.
+        # This allows the OS to terminate the process immediately when the pipe closes, avoiding
+        # tracebacks and "Exception ignored" messages during Python's interpreter shutdown.
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+    setup_logging()
 
     try:
         app()
-    except (typer.Exit, typer.Abort):
-        pass
-    except Exception as e:
-        if settings.debug:
-            raise
-        logger.opt(exception=e).debug("Unhandled exception")
-        print(f"Error: {get_msg(e)}", file=sys.stderr)
-        print("\nFor more details, see the log files:", file=sys.stderr)
-        print(f"  CLI:     {CLI_LOG_PATH}", file=sys.stderr)
-        print(f"  Manager: {MANAGER_LOG_PATH}", file=sys.stderr)
-        print(f"  Clients: {CLIENT_LOG_DIR}", file=sys.stderr)
-        sys.exit(1)
+    except Exception as e:  # noqa: BLE001
+        match e:
+            case CapabilityCommandException() as cce:
+                client_log_path = get_client_log_path(cce.client_id)
+            case _:
+                client_log_path = get_client_log_path(None)
+
+        print(f"An error occurred: {e}", file=sys.stderr)
+        if env_state.debug:
+            print(
+                dedent(
+                    f"""\
+                    For more details, check the logs:
+                    manager: {MANAGER_LOG_PATH}
+                    client: {client_log_path}"""
+                ),
+                file=sys.stderr,
+            )
 
 
 if __name__ == "__main__":

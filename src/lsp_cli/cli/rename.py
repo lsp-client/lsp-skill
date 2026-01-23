@@ -1,94 +1,82 @@
 from pathlib import Path
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.rename import (
     RenameExecuteRequest,
     RenameExecuteResponse,
     RenamePreviewRequest,
     RenamePreviewResponse,
 )
-
-from lsp_cli.utils.sync import cli_syncify
+from pydantic import RootModel
 
 from . import options as op
-from .shared import create_locate, managed_client
+from .utils import connect_server, create_locate
 
-app = typer.Typer(name="rename", help="Rename a symbol at a specific location.")
+app = cyclopts.App(name="rename", help="Rename a symbol at a specific location.")
 
 
-@app.command("preview")
-@cli_syncify
-async def rename_preview(
-    new_name: Annotated[str, typer.Argument(help="The new name for the symbol.")],
-    locate: op.LocateOpt,
+@app.command
+async def preview(
+    file_path: op.FilePathOpt,
+    new_name: Annotated[str, cyclopts.Parameter(help="The new name for the symbol.")],
+    /,
+    *,
+    scope: op.ScopeOpt = None,
+    find: op.FindOpt = None,
     project: op.ProjectOpt = None,
 ) -> None:
     """
-    Preview the effects of renaming a symbol at a specific location.
+    Preview the effects of renaming a symbol.
     """
-    locate_obj = create_locate(locate)
 
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
-        resp_obj = await client.post(
+    locate = create_locate(file_path, scope, find)
+
+    async with connect_server(locate.file_path, project_path=project) as client:
+        match await client.post(
             "/capability/rename/preview",
-            RenamePreviewResponse,
-            json=RenamePreviewRequest(locate=locate_obj, new_name=new_name),
-        )
+            RootModel[RenamePreviewResponse | None],
+            json=RenamePreviewRequest(locate=locate, new_name=new_name),
+        ):
+            case RootModel(root=RenamePreviewResponse() as resp):
+                print(resp.format())
+            case RootModel(root=None):
+                print("Warning: No rename possibilities found at the location")
 
-        if resp_obj:
-            print(resp_obj.format())
-        else:
-            print("Warning: No rename possibilities found at the location")
 
-
-@app.command("execute")
-@cli_syncify
-async def rename_execute(
+@app.command
+async def execute(
     rename_id: Annotated[
-        str, typer.Argument(help="Rename ID from a previous preview.")
+        str, cyclopts.Parameter(help="Rename ID from a previous preview.")
     ],
+    /,
+    *,
     exclude: Annotated[
         list[str] | None,
-        typer.Option(
-            "--exclude",
+        cyclopts.Parameter(
+            name="--exclude",
             help="File paths or glob patterns to exclude from the rename operation. Can be specified multiple times.",
         ),
     ] = None,
-    workspace: op.WorkspaceOpt = None,
     project: op.ProjectOpt = None,
 ) -> None:
     """
     Execute a rename operation using the ID from a previous preview.
     """
-    if workspace is None:
-        workspace = Path.cwd()
 
-    if not workspace.is_absolute():
-        workspace = workspace.absolute()
+    # HACK convert glob to absolute path strings
+    exclude = [Path(glob).absolute().as_posix() for glob in (exclude or [])]
 
-    # Normalize exclude paths and globs to absolute paths/globs
-    normalized_exclude = []
-    if exclude:
-        cwd = Path.cwd()
-        for p in exclude:
-            p_obj = Path(p)
-            if p_obj.is_absolute():
-                normalized_exclude.append(p)
-            else:
-                normalized_exclude.append(str(cwd / p))
-
-    async with managed_client(workspace, project_path=project) as client:
-        resp_obj = await client.post(
+    async with connect_server(project or Path.cwd()) as client:
+        match await client.post(
             "/capability/rename/execute",
-            RenameExecuteResponse,
+            RootModel[RenameExecuteResponse | None],
             json=RenameExecuteRequest(
                 rename_id=rename_id,
-                exclude_files=normalized_exclude,
+                exclude_files=exclude,
             ),
-        )
-
-        if resp_obj:
-            print(resp_obj.format())
-        else:
-            raise RuntimeError("Failed to execute rename")
+        ):
+            case RootModel(root=RenameExecuteResponse() as resp):
+                print(resp.format())
+            case _:
+                raise RuntimeError("Failed to execute rename")

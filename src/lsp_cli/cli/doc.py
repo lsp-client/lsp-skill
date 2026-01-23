@@ -1,31 +1,38 @@
-import typer
+import cyclopts
 from lsap.schema.doc import DocRequest, DocResponse
-
-from lsp_cli.utils.sync import cli_syncify
+from pydantic import RootModel
 
 from . import options as op
-from .shared import create_locate, managed_client
+from .utils import connect_server, create_locate
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="doc",
+    help="Get documentation and type information for a symbol.",
+)
 
 
-@app.command("doc")
-@cli_syncify
-async def get_doc(
-    locate: op.LocateOpt,
+@app.default
+async def doc(
+    file_path: op.FilePathOpt,
+    /,
+    *,
+    scope: op.ScopeOpt = None,
+    find: op.FindOpt = None,
     project: op.ProjectOpt = None,
 ) -> None:
     """
-    Get documentation and type information for a symbol at a specific location.
+    Get documentation and type information for a symbol.
     """
-    locate_obj = create_locate(locate)
 
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
-        resp_obj = await client.post(
-            "/capability/hover", DocResponse, json=DocRequest(locate=locate_obj)
-        )
+    locate = create_locate(file_path, scope, find)
 
-    if resp_obj:
-        print(resp_obj.format())
-    else:
-        print("Warning: No documentation found")
+    async with connect_server(locate.file_path, project_path=project) as client:
+        match await client.post(
+            "/capability/doc",
+            RootModel[DocResponse | None],
+            json=DocRequest(locate=locate),
+        ):
+            case RootModel(root=DocResponse() as resp):
+                print(resp.format())
+            case RootModel(root=None):
+                print("No documentation found.")

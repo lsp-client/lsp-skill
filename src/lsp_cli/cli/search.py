@@ -1,54 +1,53 @@
 from pathlib import Path
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.models import SymbolKind
 from lsap.schema.search import SearchRequest, SearchResponse
+from pydantic import RootModel
 
 from lsp_cli.settings import settings
-from lsp_cli.utils.sync import cli_syncify
 
 from . import options as op
-from .shared import managed_client
+from .utils import connect_server
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="search",
+    help="Search for symbols across the entire workspace.",
+)
 
 
-@app.command("search")
-@cli_syncify
+@app.default
 async def search(
     query: Annotated[
         str,
-        typer.Argument(help="The name or partial name of the symbol to search for."),
+        cyclopts.Parameter(help="The fuzzy-match name of the symbol to search for."),
     ],
-    workspace: op.WorkspaceOpt = None,
+    /,
+    *,
     kinds: Annotated[
         list[str] | None,
-        typer.Option(
-            "--kind",
-            "-k",
+        cyclopts.Parameter(
             help="Filter by symbol kind (e.g., 'class', 'function'). Can be specified multiple times.",
         ),
     ] = None,
+    project: op.ProjectOpt = None,
     max_items: op.MaxItemsOpt = None,
     start_index: op.StartIndexOpt = 0,
     pagination_id: op.PaginationIdOpt = None,
-    project: op.ProjectOpt = None,
 ) -> None:
     """
     Search for symbols across the entire workspace by name query.
     """
-    if workspace is None:
-        workspace = Path.cwd()
 
-    async with managed_client(workspace, project_path=project) as client:
+    async with connect_server(project or Path.cwd()) as client:
         effective_max_items = (
             max_items if max_items is not None else settings.default_max_items
         )
 
-        resp_obj = await client.post(
+        match await client.post(
             "/capability/search",
-            SearchResponse,
+            RootModel[SearchResponse | None],
             json=SearchRequest(
                 query=query,
                 kinds=[SymbolKind(k) for k in kinds] if kinds else None,
@@ -56,13 +55,12 @@ async def search(
                 start_index=start_index,
                 pagination_id=pagination_id,
             ),
-        )
-
-    if resp_obj and resp_obj.items:
-        print(resp_obj.format())
-        if effective_max_items and len(resp_obj.items) >= effective_max_items:
-            print(
-                f"\nInfo: Showing {effective_max_items} results. Use --max-items to see more."
-            )
-    else:
-        print("Warning: No matches found")
+        ):
+            case RootModel(root=SearchResponse() as resp) if resp.items:
+                print(resp.format())
+                if effective_max_items and len(resp.items) >= effective_max_items:
+                    print(
+                        f"\nInfo: Showing {effective_max_items} results. Use --max-items to see more."
+                    )
+            case _:
+                print("Warning: No matches found")

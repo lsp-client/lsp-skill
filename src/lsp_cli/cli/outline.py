@@ -1,30 +1,30 @@
-from pathlib import Path
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.models import SymbolKind
 from lsap.schema.outline import OutlineRequest, OutlineResponse
+from pydantic import RootModel
 
-from lsp_cli.utils.sync import cli_syncify
+from lsp_cli.cli.options import FilePathOpt
 
 from . import options as op
-from .shared import managed_client
+from .utils import connect_server
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="outline",
+    help="Get the hierarchical symbol outline for a specific file.",
+)
 
 
-@app.command("outline")
-@cli_syncify
-async def get_outline(
-    file_path: Annotated[
-        Path,
-        typer.Argument(help="Path to the file to get the symbol outline for."),
-    ],
+@app.default
+async def outline(
+    file_path: FilePathOpt,
+    /,
+    *,
     all_symbols: Annotated[
         bool,
-        typer.Option(
-            "--all",
-            "-a",
+        cyclopts.Parameter(
+            name=["--all", "-a"],
             help="Show all symbols including local variables and parameters.",
         ),
     ] = False,
@@ -33,37 +33,36 @@ async def get_outline(
     """
     Get the hierarchical symbol outline (classes, functions, etc.) for a specific file.
     """
-    if not file_path.is_absolute():
-        file_path = file_path.absolute()
 
-    async with managed_client(file_path, project_path=project) as client:
-        resp_obj = await client.post(
+    async with connect_server(file_path, project_path=project) as client:
+        match await client.post(
             "/capability/outline",
-            OutlineResponse,
-            json=OutlineRequest(file_path=file_path),
-        )
-
-    if resp_obj and resp_obj.items:
-        if not all_symbols:
-            filtered_items = [
-                item
-                for item in resp_obj.items
-                if item.kind
-                in {
-                    SymbolKind.Class,
-                    SymbolKind.Function,
-                    SymbolKind.Method,
-                    SymbolKind.Interface,
-                    SymbolKind.Enum,
-                    SymbolKind.Module,
-                    SymbolKind.Namespace,
-                    SymbolKind.Struct,
-                }
-            ]
-            resp_obj.items = filtered_items
-            if not filtered_items:
-                print("Warning: No symbols found (use --all to show local variables)")
-                return
-        print(resp_obj.format())
-    else:
-        print("Warning: No symbols found")
+            RootModel[OutlineResponse | None],
+            json=OutlineRequest(file_path=file_path.resolve()),
+        ):
+            case RootModel(root=OutlineResponse() as resp) if resp.items:
+                if not all_symbols:
+                    filtered_items = [
+                        item
+                        for item in resp.items
+                        if item.kind
+                        in {
+                            SymbolKind.Class,
+                            SymbolKind.Function,
+                            SymbolKind.Method,
+                            SymbolKind.Interface,
+                            SymbolKind.Enum,
+                            SymbolKind.Module,
+                            SymbolKind.Namespace,
+                            SymbolKind.Struct,
+                        }
+                    ]
+                    resp.items = filtered_items
+                    if not filtered_items:
+                        print(
+                            "Warning: No symbols found (use --all to show local variables)"
+                        )
+                        return
+                print(resp.format())
+            case _:
+                print("Warning: No symbols found")

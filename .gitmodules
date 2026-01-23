@@ -1,0 +1,6 @@
+[submodule "packages/LSAP"]
+	path = packages/LSAP
+	url = https://github.com/lsp-client/LSAP.git
+[submodule "packages/lsp-client"]
+	path = packages/lsp-client
+	url = https://github.com/lsp-client/lsp-client.git

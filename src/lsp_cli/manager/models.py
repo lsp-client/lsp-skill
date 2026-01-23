@@ -12,8 +12,7 @@ class ManagedClientInfo(BaseModel):
     remaining_time: float
 
     @classmethod
-    def format(cls, data: list[ManagedClientInfo] | ManagedClientInfo) -> str:
-        infos = [data] if isinstance(data, ManagedClientInfo) else data
+    def format(cls, infos: list[ManagedClientInfo]) -> str:
         lines = [
             f"{info.language:<10} {info.project_path} ({info.remaining_time:.1f}s)"
             for info in infos
@@ -22,7 +21,7 @@ class ManagedClientInfo(BaseModel):
 
 
 class ManagedClientInfoList(RootModel[list[ManagedClientInfo]]):
-    pass
+    root: list[ManagedClientInfo]
 
 
 class CreateClientRequest(BaseModel):
@@ -36,12 +35,13 @@ class CreateClientResponse(BaseModel):
 
 
 class DeleteClientRequest(BaseModel):
-    path: Path
+    path: Path | None = None
     project_path: Path | None = None
+    all: bool = False
 
 
 class DeleteClientResponse(BaseModel):
-    info: ManagedClientInfo | None
+    info: ManagedClientInfo
 
 
 class LspRequest(BaseModel):
@@ -54,3 +54,7 @@ class LspResponse(BaseModel):
 
 class LspNotification(BaseModel):
     payload: RawNotification
+
+
+class GetIDResponse(BaseModel):
+    id: str

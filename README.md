@@ -11,8 +11,6 @@ This [agent skill](https://agentskills.io) equips AI agents with the [Language S
 
 ## 📦 Installation
 
-### For AI Agents
-
 😎 Copy the following prompt to your agent and let it do all the heavy lifting for you:
 
 ````markdown
@@ -43,12 +41,12 @@ Please follow these steps to install this skill:
    ```
 ````
 
-### Using openskills
+### Manual Installation
 
-You can also use [openskills](https://github.com/numman-ali/openskills):
+You can also use [skills](https://skills.sh/) for easy installation:
 
 ```bash
-openskills install lsp-client/lsp-skill --global
+npx skills add lsp-client/lsp-skill
 ```
 
 ## ⚡ Capabilities

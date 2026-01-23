@@ -10,20 +10,32 @@ import loguru
 import uvicorn
 import xxhash
 from attrs import define, field
-from litestar import Litestar, Request, Response
-from loguru import logger as global_logger
+from litestar import Controller, Litestar, Request, Response, get
+from litestar.datastructures import State
+from loguru import logger
 
 from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import Capabilities, CapabilityController
-from lsp_cli.settings import CLIENT_LOG_DIR, RUNTIME_DIR, settings
+from lsp_cli.settings import RUNTIME_DIR, get_client_log_path, settings
+from lsp_cli.utils.logging import logging_filter
+from lsp_cli.utils.uds import open_uds
 
-from .models import ManagedClientInfo
+from .models import GetIDResponse, ManagedClientInfo
 
 
 def get_client_id(target: ClientTarget) -> str:
     kind = target.client_cls.get_language_config().kind
     path_hash = xxhash.xxh32_hexdigest(target.project_path.as_posix())
     return f"{kind.value}-{path_hash}-default"
+
+
+class ClientController(Controller):
+    path = "/client"
+
+    @get("/id")
+    async def get_id(self, state: State) -> GetIDResponse:
+        managed_client: ManagedClient = state.managed_client
+        return GetIDResponse(id=managed_client.id)
 
 
 @define
@@ -38,26 +50,24 @@ class ManagedClient:
     _should_exit: bool = False
 
     _logger: loguru.Logger = field(init=False)
-    _logger_sink_id: int = field(init=False)
+    _sink_id: int = field(init=False)
+
+    def _setup_logger(self) -> None:
+        log_file = get_client_log_path(self.id)
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        self._sink_id = logger.add(
+            log_file,
+            filter=logging_filter("client_id", self.id),
+            format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
+            level="INFO",
+        )
+        self._logger = logger.bind(client_id=self.id)
 
     def __attrs_post_init__(self) -> None:
         self._deadline = anyio.current_time() + settings.idle_timeout
 
-        client_log_dir = CLIENT_LOG_DIR
-        client_log_dir.mkdir(parents=True, exist_ok=True)
-
-        log_path = client_log_dir / f"{self.id}.log"
-        log_level = settings.effective_log_level
-        self._logger_sink_id = global_logger.add(
-            log_path,
-            rotation="10 MB",
-            retention="1 day",
-            level=log_level,
-            format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}:{function}:{line}</cyan> - <level>{message}</level>",
-            enqueue=True,
-        )
-        self._logger = global_logger.bind(client_id=self.id)
-        self._logger.info("Client log initialized at {}", log_path)
+        self._setup_logger()
+        self._logger.info("Client initialized")
 
     @property
     def id(self) -> str:
@@ -103,25 +113,25 @@ class ManagedClient:
     async def _serve(self) -> None:
         @asynccontextmanager
         async def lifespan(app: Litestar) -> AsyncGenerator[None]:
+            app.state.managed_client = self
             async with self.target.client_cls(
                 workspace=self.target.project_path,
                 request_timeout=120,
             ) as client:
-                app.state.client = client
                 app.state.capabilities = Capabilities.build(client)
                 yield
 
         def exception_handler(request: Request, exc: Exception) -> Response:
             self._logger.exception("Unhandled exception in Litestar: {}", exc)
+
             return Response(
                 content={"detail": str(exc)},
                 status_code=500,
             )
 
         app = Litestar(
-            route_handlers=[CapabilityController],
+            route_handlers=[CapabilityController, ClientController],
             lifespan=[lifespan],
-            debug=settings.debug,
             exception_handlers={Exception: exception_handler},
         )
 
@@ -141,15 +151,11 @@ class ManagedClient:
             self.uds_path,
         )
 
-        uds_path = anyio.Path(self.uds_path)
-        await uds_path.unlink(missing_ok=True)
-        await uds_path.parent.mkdir(parents=True, exist_ok=True)
-
-        try:
-            await self._serve()
-        finally:
-            self._logger.info("Cleaning up client")
-            await uds_path.unlink(missing_ok=True)
-            self._logger.remove(self._logger_sink_id)
-            self._timeout_scope.cancel()
-            self._server_scope.cancel()
+        async with open_uds(self.uds_path):
+            try:
+                await self._serve()
+            finally:
+                self._logger.info("Cleaning up client")
+                logger.remove(self._sink_id)
+                self._timeout_scope.cancel()
+                self._server_scope.cancel()

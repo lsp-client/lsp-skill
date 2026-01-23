@@ -1,17 +1,16 @@
-import socket
 from pathlib import Path
 
 import anyio
 from tenacity import AsyncRetrying, stop_after_delay, wait_fixed
 
 
-def is_socket_alive(path: Path) -> bool:
+async def is_socket_alive(path: Path) -> bool:
     try:
-        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
-            s.connect(str(path))
-            return True
-    except OSError:
+        await anyio.connect_unix(path)
+    except (OSError, ConnectionRefusedError, FileNotFoundError):
         return False
+
+    return True
 
 
 async def wait_socket(path: Path, timeout: float = 10.0) -> None:
@@ -21,7 +20,4 @@ async def wait_socket(path: Path, timeout: float = 10.0) -> None:
         reraise=True,
     ):
         with attempt:
-            try:
-                _ = await anyio.connect_unix(path)
-            except (OSError, RuntimeError) as e:
-                raise OSError(f"Socket {path} not ready") from e
+            await anyio.connect_unix(path)

@@ -37,4 +37,5 @@ def match_target(project_path: Path) -> ClientTarget | None:
         lang_config = client_cls.get_language_config()
         if lang_config.is_project_root(project_path):
             return ClientTarget(client_cls=client_cls, project_path=project_path)
+
     return None

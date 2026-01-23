@@ -1,41 +1,68 @@
 from typing import Annotated
 
-import typer
+import cyclopts
 from lsap.schema.locate import LocateRequest, LocateResponse
-
-from lsp_cli.utils.sync import cli_syncify
+from pydantic import RootModel
 
 from . import options as op
-from .shared import create_locate, managed_client
+from .utils import connect_server, create_locate
 
-app = typer.Typer()
+app = cyclopts.App(name="locate")
 
 
-@app.command("locate")
-@cli_syncify
-async def get_location(
-    locate: Annotated[str, typer.Argument(help="The locate string to parse.")],
-    check: bool = typer.Option(
-        False,
-        "--check",
-        "-c",
-        help="Verify if the target exists in the file and show its context.",
-    ),
+@app.default
+async def locate(
+    file_path: op.FilePathOpt,
+    /,
+    *,
+    scope: Annotated[str | None, cyclopts.Parameter()] = None,
+    find: Annotated[str | None, cyclopts.Parameter()] = None,
     project: op.ProjectOpt = None,
 ) -> None:
     """
     Locate a position or range in the codebase using a string syntax.
+
+    Args:
+        file_path:
+            Path to the file.
+        scope:
+            Narrow search to a symbol body or line range.
+            If omitted, search the entire file (requires `find`).
+
+            Valid formats:
+              - `line`: Single line number (e.g., `42`).
+              - `start,end`: Line range (e.g., `10,20`). Use 0 for end to mean till EOF (e.g., `10,0`).
+              - `symbol.path`: Dot-separated symbol path (e.g., `MyClass.my_method`).
+        find:
+            Text pattern to find within scope.
+            If omitted, locate the start of the `scope` (requires `scope`).
+            For symbol scopes, this points to the symbol declaration.
+
+            Whitespace insensitive (e.g., `int main` matches `int  \\nmain`).
+
+            Marker Detection:
+              - An optional position marker `<|>` can be placed for exact location.
+              - If not provided, the position defaults to the start of the match.
+              - Use `<|>` for single level, `<<|>>` for double level if `<|>` appears in source, etc.
+
+            Examples:
+              - `my_variable`
+              - `self.<|>`
+              - `return <|>result`
+              - `x = <|> + y <<|>> z`
+        project:
+            Path to the project. If specified, start a server in this directory.
     """
-    locate_obj = create_locate(locate)
 
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
-        resp_obj = await client.post(
-            "/capability/locate", LocateResponse, json=LocateRequest(locate=locate_obj)
-        )
+    locate = create_locate(file_path, scope, find)
 
-    if resp_obj:
-        print(resp_obj.format())
-    elif check:
-        raise RuntimeError(f"Target '{locate}' not found")
-    else:
-        print(locate_obj)
+    async with connect_server(locate.file_path, project_path=project) as client:
+        match await client.post(
+            "/capability/locate",
+            RootModel[LocateResponse | None],
+            json=LocateRequest(locate=locate),
+        ):
+            case RootModel(root=LocateResponse() as resp):
+                print(resp.format())
+            case RootModel(root=None):
+                print("No location found.")

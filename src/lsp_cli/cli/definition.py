@@ -1,57 +1,47 @@
 from typing import Annotated, Literal
 
-import typer
+import cyclopts
 from lsap.schema.definition import DefinitionRequest, DefinitionResponse
-
-from lsp_cli.utils.sync import cli_syncify
+from lsap.schema.rename import RootModel
 
 from . import options as op
-from .shared import create_locate, managed_client
+from .utils import connect_server, create_locate
 
-app = typer.Typer()
+app = cyclopts.App(
+    name="definition",
+    help="Find the definition, declaration, or type definition of a symbol.",
+)
 
 
-@app.command("definition")
-@cli_syncify
-async def get_definition(
-    locate: op.LocateOpt,
+@app.default
+async def definition(
+    file_path: op.FilePathOpt,
+    /,
+    *,
+    scope: op.ScopeOpt = None,
+    find: op.FindOpt = None,
     mode: Annotated[
         Literal["definition", "declaration", "type_definition"],
-        typer.Option(
-            "--mode",
-            "-m",
-            help="Search mode (default: definition).",
-            hidden=True,
+        cyclopts.Parameter(
+            help="Mode to locate symbol.",
+            show_default=True,
         ),
     ] = "definition",
-    decl: bool = typer.Option(False, "--decl", help="Search for symbol declaration."),
-    type_def: bool = typer.Option(False, "--type", help="Search for type definition."),
     project: op.ProjectOpt = None,
 ) -> None:
     """
-    Find the definition (default), declaration (--decl), or type definition (--type) of a symbol.
+    Find the definition (default), declaration, or type definition of a symbol.
     """
-    if decl and type_def:
-        raise ValueError("--decl and --type are mutually exclusive")
 
-    if decl:
-        mode = "declaration"
-    elif type_def:
-        mode = "type_definition"
+    locate = create_locate(file_path, scope, find)
 
-    locate_obj = create_locate(locate)
-
-    async with managed_client(locate_obj.file_path, project_path=project) as client:
-        resp_obj = await client.post(
+    async with connect_server(locate.file_path, project_path=project) as client:
+        match await client.post(
             "/capability/definition",
-            DefinitionResponse,
-            json=DefinitionRequest(
-                locate=locate_obj,
-                mode=mode,
-            ),
-        )
-
-    if resp_obj:
-        print(resp_obj.format())
-    else:
-        print(f"Warning: No {mode.replace('_', ' ')} found")
+            RootModel[DefinitionResponse | None],
+            json=DefinitionRequest(locate=locate, mode=mode),
+        ):
+            case RootModel(root=DefinitionResponse() as resp):
+                print(resp.format())
+            case RootModel(root=None):
+                print("No definition found.")
