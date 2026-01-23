@@ -13,6 +13,16 @@ def parse_scope(scope_str: str | None) -> LineScope | SymbolScope | None:
     if not scope_str:
         return None
 
+    if "," in scope_str or scope_str.isdigit():
+        return parse_line_scope(scope_str)
+
+    return parse_symbol_scope(scope_str)
+
+
+def parse_line_scope(scope_str: str | None) -> LineScope | None:
+    if not scope_str:
+        return None
+
     if "," in scope_str:
         start, end = scope_str.split(",", 1)
         return LineScope(start_line=int(start), end_line=int(end))
@@ -20,6 +30,13 @@ def parse_scope(scope_str: str | None) -> LineScope | SymbolScope | None:
     if scope_str.isdigit():
         start_line = int(scope_str)
         return LineScope(start_line=start_line, end_line=start_line + 1)
+
+    return None
+
+
+def parse_symbol_scope(scope_str: str | None) -> SymbolScope | None:
+    if not scope_str:
+        return None
 
     symbol_path = scope_str.split(".")
     return SymbolScope(symbol_path=symbol_path)

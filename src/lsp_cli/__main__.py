@@ -7,7 +7,6 @@ from loguru import logger
 
 from lsp_cli.cli import (
     definition,
-    doc,
     locate,
     outline,
     reference,
@@ -33,7 +32,6 @@ app = cyclopts.App(
 app.command(server.app)
 app.command(rename.app)
 app.command(definition.app)
-app.command(doc.app)
 app.command(locate.app)
 app.command(reference.app)
 app.command(outline.app)
