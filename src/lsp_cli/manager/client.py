@@ -17,7 +17,7 @@ from loguru import logger
 from lsp_cli.client import ClientTarget
 from lsp_cli.manager.capability import Capabilities, CapabilityController
 from lsp_cli.settings import RUNTIME_DIR, get_client_log_path, settings
-from lsp_cli.utils.logging import extra_filter
+from lsp_cli.utils.logging import logging_filter
 from lsp_cli.utils.uds import open_uds
 
 from .models import GetIDResponse, ManagedClientInfo
@@ -57,7 +57,7 @@ class ManagedClient:
         log_file.parent.mkdir(parents=True, exist_ok=True)
         self._sink_id = logger.add(
             log_file,
-            filter=extra_filter("client_id", self.id),
+            filter=logging_filter("client_id", self.id),
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
             level="INFO",
         )

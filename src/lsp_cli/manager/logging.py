@@ -4,7 +4,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from lsp_cli.utils.logging import extra_filter
+from lsp_cli.utils.logging import logging_filter
 
 
 def setup_manager_logging(log_file: Path) -> None:
@@ -19,7 +19,7 @@ def setup_manager_logging(log_file: Path) -> None:
 
     logger.add(
         log_file,
-        filter=extra_filter("client_id", exclude=True),
+        filter=logging_filter("client_id", exclude=True),
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
         level="INFO",
     )

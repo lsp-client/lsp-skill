@@ -24,7 +24,7 @@ from lsp_cli.settings import (
     MANAGER_UDS_PATH,
 )
 from lsp_cli.utils.http import AsyncHttpClient
-from lsp_cli.utils.logging import extra_filter
+from lsp_cli.utils.logging import logging_filter
 from lsp_cli.utils.socket import is_socket_alive, wait_socket
 
 from .client import ManagedClient, get_client_id
@@ -48,7 +48,7 @@ class Manager:
 
         self._sink_id = logger.add(
             MANAGER_LOG_PATH,
-            filter=extra_filter("client_id", exclude=True),
+            filter=logging_filter("client_id", exclude=True),
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
             level="INFO",
         )

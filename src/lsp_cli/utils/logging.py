@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-
 import loguru
 
 
-def extra_filter(
-    key: str, value: object = None, *, exclude: bool = False
-) -> Callable[[loguru.Record], bool]:
+def logging_filter(
+    key: str, value: object | None = None, *, exclude: bool = False
+) -> loguru.FilterFunction:
     """Create a loguru filter based on extra context.
 
     If value is None, it checks for the existence of the key.
