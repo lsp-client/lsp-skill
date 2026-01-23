@@ -53,6 +53,14 @@ ScopeOpt = Annotated[
     ),
 ]
 
+SymbolOpt = Annotated[
+    str | None,
+    Parameter(
+        name=["--symbol"],
+        help="Narrow to a specific symbol path (e.g. MyClass.my_method).",
+    ),
+]
+
 FindOpt = Annotated[
     str | None,
     Parameter(

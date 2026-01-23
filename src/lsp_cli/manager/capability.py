@@ -8,7 +8,6 @@ from lsap.capability.definition import (
     DefinitionRequest,
     DefinitionResponse,
 )
-from lsap.capability.doc import DocCapability, DocRequest, DocResponse
 from lsap.capability.locate import LocateCapability, LocateRequest, LocateResponse
 from lsap.capability.outline import OutlineCapability, OutlineRequest, OutlineResponse
 from lsap.capability.reference import (
@@ -32,7 +31,6 @@ from lsp_client import Client
 @frozen
 class Capabilities:
     definition: DefinitionCapability
-    doc: DocCapability
     locate: LocateCapability
     outline: OutlineCapability
     reference: ReferenceCapability
@@ -45,7 +43,6 @@ class Capabilities:
     def build(cls, client: Client) -> Self:
         return cls(
             definition=DefinitionCapability(client),
-            doc=DocCapability(client),
             locate=LocateCapability(client),
             outline=OutlineCapability(client),
             reference=ReferenceCapability(client),
@@ -64,10 +61,6 @@ class CapabilityController(Controller):
         self, data: DefinitionRequest, state: State
     ) -> DefinitionResponse | None:
         return await state.capabilities.definition(data)
-
-    @post("/doc")
-    async def doc(self, data: DocRequest, state: State) -> DocResponse | None:
-        return await state.capabilities.doc(data)
 
     @post("/locate")
     async def locate(self, data: LocateRequest, state: State) -> LocateResponse | None:
