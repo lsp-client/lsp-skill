@@ -441,7 +441,7 @@ dev = [
 
 [[package]]
 name = "lsp-client"
-version = "0.3.6"
+version = "0.3.7"
 source = { editable = "packages/lsp-client" }
 dependencies = [
     { name = "aioshutil" },

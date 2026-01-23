@@ -27,7 +27,7 @@ dependencies = [
     "xxhash>=3.6.0",
     "tenacity>=9.1.2",
     "lsap-sdk>=0.1.5",
-    "lsp-client>=0.3.6",
+    "lsp-client>=0.3.7",
     "cyclopts>=4.5.0",
 ]
 
