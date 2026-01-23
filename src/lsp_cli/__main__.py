@@ -3,6 +3,7 @@ import sys
 from textwrap import dedent
 
 import cyclopts
+from loguru import logger
 
 from lsp_cli.cli import (
     definition,
@@ -40,6 +41,7 @@ app.command(symbol.app)
 app.command(search.app)
 
 
+@logger.catch
 def run() -> None:
     if sys.platform != "win32":
         # Restore default SIGPIPE behavior to prevent BrokenPipeError when piping to tools like `head`.
