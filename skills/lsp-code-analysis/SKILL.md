@@ -8,19 +8,22 @@ license: LICENSE
 
 ## IMPORTANT: PREREQUISITE
 
-**You MUST run the [update script](scripts/update.sh) to check for updates before using this skill.**
+To use this skill, you **MUST** follow these steps:
 
-Before any LSP operations, you **MUST first run `lsp server start <project_path>` to verify project support**.
+1.  **Check for updates**: Run the [update script](scripts/update.sh) to ensure you are using the latest version of the tool.
+2.  **Verify project support**: Run `lsp server start <project_path>` to start the LSP server and confirm the project is supported.
 
 **IF YOU DO NOT PERFORM THESE STEPS, YOU ARE NOT ALLOWED TO USE THIS SKILL.**
 
 ## Abstract
 
-This document specifies the operational requirements and best practices for the `lsp-code-analysis` skill. It provides a semantic interface to codebase navigation and analysis via the Language Server Protocol (LSP).
+This document specifies the operational requirements and best practices for the `lsp-code-analysis` skill. It provides a semantic interface to codebase navigation, analysis and refactoring via the Language Server Protocol (LSP).
 
 ## Overview
 
-You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and it SHOULD be preferred over `read` or `grep` for most code understanding tasks.
+You are provided with `lsp` CLI tool for semantic code navigation and analysis. It SHOULD be preferred over `read` or `grep` for most code understanding tasks.
+
+Usages:
 
 - **Semantic navigation**: Jump to definitions, find references, locate implementations - understands code structure, not just text patterns.
 - **Language-aware**: Distinguishes between variables, functions, classes, types - eliminates false positives from text search.
@@ -28,6 +31,8 @@ You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and
 - **Type-aware**: Get precise type information, signatures, documentation - without reading implementation code.
 
 ### Tool Selection
+
+**Guideline**: You SHOULD prioritize LSP commands for code navigation and analysis. Agents MAY use `read` or `grep` ONLY when semantic analysis is not applicable (e.g., searching for comments or literal strings).
 
 | Task                | Traditional Tool | Recommended LSP Command                         |
 | ------------------- | ---------------- | ----------------------------------------------- |
@@ -37,30 +42,9 @@ You SHOULD use the `lsp` CLI tool for semantic code navigation and analysis, and
 | **View Docs/Types** | `read`           | [`doc`](#doc-get-documentation)                 |
 | **Refactor**        | `sed`            | See [Refactoring Guide](references/refactor.md) |
 
-**Guideline**: Agents SHOULD prioritize LSP commands for code navigation and analysis. Agents MAY use `read` or `grep` ONLY when semantic analysis is not applicable (e.g., searching for comments or literal strings).
-
 ## Commands
 
 All commands support `-h` or `--help`.
-
-### Pagination
-
-Use pagination for large result sets in `reference` and `search`. **Pagination is only active when `--pagination-id` is provided.**
-
-- `--pagination-id <ID>`: **(Required)** Unique session ID for consistent paging.
-- `--max-items <N>`: Page size.
-- `--start-index <N>`: Offset (0-based).
-
-**Example**:
-```bash
-# Page 1
-lsp search "User" --max-items 20 --pagination-id "task_123"
-
-# Page 2
-lsp search "User" --max-items 20 --start-index 20 --pagination-id "task_123"
-```
-
-**Guideline**: Use pagination with a unique ID for common symbols to fetch results in manageable chunks. Increment `--start-index` using the same ID to browse.
 
 ### Locating Symbols
 
@@ -101,8 +85,9 @@ The `<|>` marker indicates the exact position for symbol resolution. It represen
 - `lsp doc foo.py --scope MyClass` - Target the `MyClass` symbol directly
 
 **Guideline for Scope vs. Find**:
-- Use `--scope <symbol_path>` (e.g., `--scope MyClass.my_method`) when you want to target a **symbol's definition** or its entire body. This is more robust as it relies on semantic structure.
-- Use `--find` (often combined with `--scope`) when you need to target a **specific usage or location within a code block** (e.g., a specific variable access, a keyword, or an expression).
+
+- Use `--scope <symbol_path>` (e.g., `--scope MyClass`, `--scope MyClass.my_method`) to target **classes, functions, or methods**. This is the most robust and preferred way to target symbol.
+- Use `--find` (often combined with `--scope`) to target variables or specific positions. Use this when the target is not a uniquely named symbol or when you need to pinpoint a specific usage within a code block.
 
 Agents MAY use `lsp locate <file_path> --scope <scope> --find <find>` to verify if the target exists in the file and view its context before running other commands.
 
@@ -110,6 +95,26 @@ Agents MAY use `lsp locate <file_path> --scope <scope> --find <find>` to verify 
 # Verify location exists
 lsp locate main.py --scope 42 --find "<|>process_data"
 ```
+
+### Pagination
+
+Use pagination for large result sets like `reference` or `search`.
+
+- `--pagination-id <ID>`: (Required) Unique session ID for consistent paging.
+- `--max-items <N>`: Page size.
+- `--start-index <N>`: Offset (0-based).
+
+**Example**:
+
+```bash
+# Page 1
+lsp search "User" --max-items 20 --pagination-id "task_123"
+
+# Page 2
+lsp search "User" --max-items 20 --start-index 20 --pagination-id "task_123"
+```
+
+**Guideline**: Use pagination with a unique ID for common symbols to fetch results in manageable chunks. Increment `--start-index` using the same ID to browse.
 
 ### Outline: File Structure
 
@@ -137,7 +142,7 @@ lsp definition models.py --scope User.get_id
 lsp definition main.py --scope 42 --find "<|>config"
 
 # Find declaration (e.g., header files, interface declarations)
-lsp definition models.py --scope 25 --mode declaration
+lsp definition models.py --scope 25 --mode declaration --find "<|>provider"
 
 # Find the class definition of a variable's type
 lsp definition models.py --scope 30 --find "<|>user" --mode type_definition
@@ -152,10 +157,10 @@ Find where symbols are used or implemented.
 lsp reference main.py --scope MyClass.run --find "<|>logger"
 
 # Find all concrete implementations of an interface/abstract class
-lsp reference api.py --find "<|>IDataProvider" --mode implementations
+lsp reference api.py --scope "IDataProvider" --mode implementations
 
 # Get more surrounding code context for each reference
-lsp reference app.py --scope 10 --find "<|>TestClass" --context-lines 5
+lsp reference app.py --scope 10 --find "<|>my_var" --context-lines 5
 
 # Limit results for large codebases
 lsp reference utils.py --find "<|>helper" --max-items 50 --start-index 0
@@ -170,7 +175,7 @@ Get documentation and type information without navigating to source.
 lsp doc main.py --scope 42
 
 # Get API documentation for process_data function
-lsp doc models.py --find "<|>process_data"
+lsp doc models.py --scope process_data
 ```
 
 Agents SHOULD prefer `doc` over `read` when only documentation or type information is needed.
@@ -196,10 +201,6 @@ lsp search "User" --max-items 20 --start-index 0
 
 Agents SHOULD use `--kinds` to filter results and reduce noise.
 
-### Refactoring Operations
-
-Read [Refactoring Guide](references/refactor.md) for rename, extract, and other safe refactoring operations.
-
 ### Symbol: Get Complete Symbol Code
 
 Get the full source code of the symbol containing a location.
@@ -209,7 +210,7 @@ Get the full source code of the symbol containing a location.
 lsp symbol main.py --scope 15
 
 # Get full UserClass implementation
-lsp symbol utils.py --find "<|>UserClass"
+lsp symbol utils.py --scope UserClass
 
 # Get complete method implementation
 lsp symbol models.py --scope User.validate
@@ -218,6 +219,10 @@ lsp symbol models.py --scope User.validate
 Response includes: symbol name, kind (class/function/method), range, and **complete source code**.
 
 Agents SHOULD use `symbol` to read targeted code blocks instead of using `read` on entire files.
+
+### Refactoring Operations
+
+Read [Refactoring Guide](references/refactor.md) for rename, extract, and other safe refactoring operations.
 
 ### Server: Manage Background Servers
 
@@ -286,7 +291,7 @@ lsp reference src/interfaces.py --scope IUserService --mode implementations
 
 ```bash
 # Step 1: Find where data is created
-lsp search "UserDTO" --kinds class
+lsp search UserDTO --kinds class
 
 # Step 2: Find where it's used
 lsp reference models.py --scope UserDTO
@@ -324,7 +329,7 @@ lsp search "User" --max-items 20
 lsp doc api.py --scope fetch_data  # Get docs/types without jumping to definition
 
 # Verify locate strings if commands fail
-lsp locate main.py --scope 42 --find "<|>process_data"
+lsp locate main.py --scope 42 --find "<|>my_var"
 ```
 
 ### Domain-Specific Guides
