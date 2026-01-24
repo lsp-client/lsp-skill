@@ -38,7 +38,7 @@ async def outline(
     If --symbol is provided, it must be a symbol path (e.g. MyClass or MyClass.my_method).
     """
 
-    parsed_scope = parse_symbol_scope(symbol)
+    parsed_scope = parse_symbol_scope(symbol) if symbol else None
 
     async with connect_server(file_path, project_path=project) as client:
         match await client.post(

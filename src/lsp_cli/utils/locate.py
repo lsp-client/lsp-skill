@@ -1,7 +1,7 @@
 from lsap.schema.locate import LineScope, SymbolScope
 
 
-def parse_scope(scope_str: str | None) -> LineScope | SymbolScope | None:
+def parse_scope(scope_str: str) -> LineScope | SymbolScope:
     """
     Parse a scope string into LineScope or SymbolScope.
 
@@ -10,19 +10,13 @@ def parse_scope(scope_str: str | None) -> LineScope | SymbolScope | None:
         - <start>,<end> - Line range with comma (e.g., "10,20"). Use 0 for end to mean till EOF (e.g., "10,0")
         - <symbol_path> - Symbol path with dots (e.g., "MyClass.my_method")
     """
-    if not scope_str:
-        return None
-
     if "," in scope_str or scope_str.isdigit():
         return parse_line_scope(scope_str)
 
     return parse_symbol_scope(scope_str)
 
 
-def parse_line_scope(scope_str: str | None) -> LineScope | None:
-    if not scope_str:
-        return None
-
+def parse_line_scope(scope_str: str) -> LineScope:
     if "," in scope_str:
         start, end = scope_str.split(",", 1)
         return LineScope(start_line=int(start), end_line=int(end))
@@ -31,12 +25,9 @@ def parse_line_scope(scope_str: str | None) -> LineScope | None:
         start_line = int(scope_str)
         return LineScope(start_line=start_line, end_line=start_line + 1)
 
-    return None
+    raise ValueError(f"Invalid line scope format: {scope_str}")
 
 
-def parse_symbol_scope(scope_str: str | None) -> SymbolScope | None:
-    if not scope_str:
-        return None
-
+def parse_symbol_scope(scope_str: str) -> SymbolScope:
     symbol_path = scope_str.split(".")
     return SymbolScope(symbol_path=symbol_path)

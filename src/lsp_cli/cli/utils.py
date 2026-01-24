@@ -17,7 +17,6 @@ from lsp_cli.utils.http import AsyncHttpClient
 from lsp_cli.utils.locate import parse_scope
 from lsp_cli.utils.socket import wait_socket
 
-
 DEFAULT_HTTP_TIMEOUT = 60.0
 
 
@@ -73,4 +72,8 @@ async def connect_server(
 def create_locate(
     file_path: Path, scope: str | None = None, find: str | None = None
 ) -> Locate:
-    return Locate(file_path=file_path, scope=parse_scope(scope), find=find)
+    return Locate(
+        file_path=file_path,
+        scope=parse_scope(scope) if scope else None,
+        find=find,
+    )
