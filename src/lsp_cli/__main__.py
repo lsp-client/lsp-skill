@@ -10,6 +10,7 @@ from lsp_cli.cli import (
     locate,
     outline,
     reference,
+    relation,
     rename,
     search,
     server,
@@ -34,6 +35,7 @@ app.command(rename.app)
 app.command(definition.app)
 app.command(locate.app)
 app.command(reference.app)
+app.command(relation.app)
 app.command(outline.app)
 app.command(symbol.app)
 app.command(search.app)

@@ -15,6 +15,11 @@ from lsap.capability.reference import (
     ReferenceRequest,
     ReferenceResponse,
 )
+from lsap.capability.relation import (
+    RelationCapability,
+    RelationRequest,
+    RelationResponse,
+)
 from lsap.capability.rename import (
     RenameExecuteCapability,
     RenameExecuteRequest,
@@ -34,6 +39,7 @@ class Capabilities:
     locate: LocateCapability
     outline: OutlineCapability
     reference: ReferenceCapability
+    relation: RelationCapability
     rename_preview: RenamePreviewCapability
     rename_execute: RenameExecuteCapability
     search: SearchCapability
@@ -46,6 +52,7 @@ class Capabilities:
             locate=LocateCapability(client),
             outline=OutlineCapability(client),
             reference=ReferenceCapability(client),
+            relation=RelationCapability(client),
             rename_preview=RenamePreviewCapability(client),
             rename_execute=RenameExecuteCapability(client),
             search=SearchCapability(client),
@@ -77,6 +84,12 @@ class CapabilityController(Controller):
         self, data: ReferenceRequest, state: State
     ) -> ReferenceResponse | None:
         return await state.capabilities.reference(data)
+
+    @post("/relation")
+    async def relation(
+        self, data: RelationRequest, state: State
+    ) -> RelationResponse | None:
+        return await state.capabilities.relation(data)
 
     @post("/rename/preview")
     async def rename_preview(
