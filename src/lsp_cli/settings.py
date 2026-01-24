@@ -29,6 +29,7 @@ LogLevel = Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 class Settings(BaseSettings):
     idle_timeout: int = 600
+    warmup_time: float = 5.0
     log_level: LogLevel = "INFO"
 
     # UX improvements
