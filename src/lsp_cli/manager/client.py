@@ -12,6 +12,7 @@ import xxhash
 from attrs import define, field
 from litestar import Controller, Litestar, Request, Response, get
 from litestar.datastructures import State
+from litestar.types import ASGIApp, Receive, Scope, Send
 from loguru import logger
 
 from lsp_cli.client import ClientTarget
@@ -45,6 +46,7 @@ class ManagedClient:
     _server: uvicorn.Server = field(init=False)
     _timeout_scope: anyio.CancelScope = field(init=False)
     _server_scope: anyio.CancelScope = field(init=False)
+    _warmup_event: anyio.Event = field(init=False)
 
     _deadline: float = field(init=False)
     _should_exit: bool = False
@@ -65,6 +67,7 @@ class ManagedClient:
 
     def __attrs_post_init__(self) -> None:
         self._deadline = anyio.current_time() + settings.idle_timeout
+        self._warmup_event = anyio.Event()
 
         self._setup_logger()
         self._logger.info("Client initialized")
@@ -83,6 +86,7 @@ class ManagedClient:
             project_path=self.target.project_path,
             language=self.target.client_cls.get_language_config().kind.value,
             remaining_time=max(0.0, self._deadline - anyio.current_time()),
+            is_warming_up=not self._warmup_event.is_set(),
         )
 
     def stop(self) -> None:
@@ -95,6 +99,13 @@ class ManagedClient:
     def _reset_timeout(self) -> None:
         self._deadline = anyio.current_time() + settings.idle_timeout
         self._timeout_scope.cancel()
+
+    async def _warmup_task(self) -> None:
+        if settings.warmup_time > 0:
+            self._logger.info("Warming up for {} seconds", settings.warmup_time)
+            await anyio.sleep(settings.warmup_time)
+        self._warmup_event.set()
+        self._logger.info("Warmup complete")
 
     async def _timeout_loop(self) -> None:
         while not self._should_exit:
@@ -129,19 +140,29 @@ class ManagedClient:
                 status_code=500,
             )
 
+        def warmup_middleware(app: ASGIApp) -> ASGIApp:
+            async def middleware(scope: Scope, receive: Receive, send: Send) -> None:
+                if scope["type"] == "http":
+                    await self._warmup_event.wait()
+                await app(scope, receive, send)
+
+            return middleware
+
         app = Litestar(
             route_handlers=[CapabilityController, ClientController],
             lifespan=[lifespan],
             exception_handlers={Exception: exception_handler},
+            middleware=[warmup_middleware],
         )
 
         config = uvicorn.Config(app, uds=str(self.uds_path), loop="asyncio")
         self._server = uvicorn.Server(config)
 
-        async with asyncer.create_task_group() as tg:
-            with anyio.CancelScope() as scope:
-                self._server_scope = scope
+        with anyio.CancelScope() as scope:
+            self._server_scope = scope
+            async with asyncer.create_task_group() as tg:
                 tg.soonify(self._timeout_loop)()
+                tg.soonify(self._warmup_task)()
                 await self._server.serve()
 
     async def run(self) -> None:

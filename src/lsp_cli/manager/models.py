@@ -10,13 +10,16 @@ class ManagedClientInfo(BaseModel):
     project_path: Path
     language: str
     remaining_time: float
+    is_warming_up: bool = False
 
     @classmethod
     def format(cls, infos: list[ManagedClientInfo]) -> str:
-        lines = [
-            f"{info.language:<10} {info.project_path} ({info.remaining_time:.1f}s)"
-            for info in infos
-        ]
+        lines = []
+        for info in infos:
+            status = " (warming up)" if info.is_warming_up else ""
+            lines.append(
+                f"{info.language:<10} {info.project_path} ({info.remaining_time:.1f}s){status}"
+            )
         return "\n".join(lines)
 
 

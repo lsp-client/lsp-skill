@@ -12,6 +12,7 @@ from lsp_cli.manager.models import (
     CreateClientResponse,
     GetIDResponse,
 )
+from lsp_cli.settings import settings
 from lsp_cli.utils.http import AsyncHttpClient
 from lsp_cli.utils.locate import parse_scope
 from lsp_cli.utils.socket import wait_socket
@@ -39,7 +40,11 @@ async def connect_server(
 
         transport = httpx.AsyncHTTPTransport(uds=uds_path.as_posix())
         async with AsyncHttpClient(
-            httpx.AsyncClient(transport=transport, base_url="http://localhost")
+            httpx.AsyncClient(
+                transport=transport,
+                base_url="http://localhost",
+                timeout=settings.warmup_time + 60.0,
+            )
         ) as client:
             resp = await client.get("/client/id", GetIDResponse)
             client_id = resp.id
