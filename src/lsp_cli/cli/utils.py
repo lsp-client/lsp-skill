@@ -17,7 +17,6 @@ from lsp_cli.utils.http import AsyncHttpClient
 from lsp_cli.utils.locate import parse_scope
 from lsp_cli.utils.socket import wait_socket
 
-
 DEFAULT_HTTP_TIMEOUT = 60.0
 
 
