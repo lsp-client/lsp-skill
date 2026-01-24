@@ -343,13 +343,14 @@ wheels = [
 
 [[package]]
 name = "lsap-sdk"
-version = "0.1.5"
+version = "0.2.0"
 source = { editable = "packages/LSAP" }
 dependencies = [
     { name = "anyio" },
     { name = "asyncer" },
     { name = "attrs" },
     { name = "cattrs" },
+    { name = "loguru" },
     { name = "lsp-client" },
     { name = "lsprotocol" },
     { name = "pydantic" },
@@ -368,6 +369,7 @@ requires-dist = [
     { name = "asyncer", specifier = ">=0.0.11" },
     { name = "attrs", specifier = ">=25.4.0" },
     { name = "cattrs", specifier = ">=25.3.0" },
+    { name = "loguru", specifier = ">=0.7.3" },
     { name = "lsp-client", editable = "packages/lsp-client" },
     { name = "lsprotocol", specifier = ">=2025.0.0" },
     { name = "pydantic", specifier = ">=2.12.5" },
