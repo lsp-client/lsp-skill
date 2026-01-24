@@ -162,6 +162,9 @@ class ManagedClient:
             self._server_scope = scope
             async with asyncer.create_task_group() as tg:
                 tg.soonify(self._timeout_loop)()
+                # We start the warmup task concurrently with the server.
+                # The warmup middleware will block incoming requests until the warmup task sets _warmup_event.
+                # This prevents "connection refused" while the client is warming up.
                 tg.soonify(self._warmup_task)()
                 await self._server.serve()
 

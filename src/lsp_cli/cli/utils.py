@@ -18,6 +18,9 @@ from lsp_cli.utils.locate import parse_scope
 from lsp_cli.utils.socket import wait_socket
 
 
+DEFAULT_HTTP_TIMEOUT = 60.0
+
+
 @asynccontextmanager
 async def connect_server(
     path: Path, project_path: Path | None = None
@@ -43,7 +46,7 @@ async def connect_server(
             httpx.AsyncClient(
                 transport=transport,
                 base_url="http://localhost",
-                timeout=settings.warmup_time + 60.0,
+                timeout=settings.warmup_time + DEFAULT_HTTP_TIMEOUT,
             )
         ) as client:
             resp = await client.get("/client/id", GetIDResponse)
