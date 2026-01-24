@@ -1,7 +1,4 @@
-from typing import Annotated
-
 import cyclopts
-from lsap.schema.models import SymbolKind
 from lsap.schema.outline import OutlineRequest, OutlineResponse
 from pydantic import RootModel
 
@@ -23,13 +20,6 @@ async def outline(
     /,
     *,
     symbol: op.SymbolOpt = None,
-    all_symbols: Annotated[
-        bool,
-        cyclopts.Parameter(
-            name=["--all", "-a"],
-            help="Show all symbols including local variables and parameters.",
-        ),
-    ] = False,
     project: op.ProjectOpt = None,
 ) -> None:
     """
@@ -49,29 +39,7 @@ async def outline(
                 scope=parsed_scope,
             ),
         ):
-            case RootModel(root=OutlineResponse() as resp) if resp.items:
-                if not all_symbols:
-                    filtered_items = [
-                        item
-                        for item in resp.items
-                        if item.kind
-                        in {
-                            SymbolKind.Class,
-                            SymbolKind.Function,
-                            SymbolKind.Method,
-                            SymbolKind.Interface,
-                            SymbolKind.Enum,
-                            SymbolKind.Module,
-                            SymbolKind.Namespace,
-                            SymbolKind.Struct,
-                        }
-                    ]
-                    resp.items = filtered_items
-                    if not filtered_items:
-                        print(
-                            "Warning: No symbols found (use --all to show local variables)"
-                        )
-                        return
+            case RootModel(root=OutlineResponse() as resp):
                 print(resp.format())
             case _:
                 print("Warning: No symbols found")
