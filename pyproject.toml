@@ -37,7 +37,8 @@ lsap-sdk = { workspace = true }
 
 [tool.uv.workspace]
 members = [
-  "packages/*"
+  "packages/LSAP",
+  "packages/lsp-client",
 ]
 
 [project.scripts]
